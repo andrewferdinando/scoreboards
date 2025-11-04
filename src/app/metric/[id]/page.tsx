@@ -32,8 +32,8 @@ export default async function MetricPage({ params }: MetricPageProps) {
 
   // Sort years descending
   const years = Object.keys(valuesByYear)
-    .map(Number)
-    .sort((a, b) => b - a);
+    .map((key: string) => Number(key))
+    .sort((a: number, b: number) => b - a);
 
   // Calculate stats
   const allValues = values.map((v: MetricValue) => Number(v.value));
@@ -114,7 +114,7 @@ export default async function MetricPage({ params }: MetricPageProps) {
           </Card>
         ) : (
           <div className="space-section">
-            {years.map((year) => {
+            {years.map((year: number) => {
               const yearValues = valuesByYear[year].sort((a: MetricValue, b: MetricValue) => b.month - a.month);
               
               return (
@@ -122,7 +122,7 @@ export default async function MetricPage({ params }: MetricPageProps) {
                   <h2 className="text-2xl font-semibold mb-6">{year}</h2>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {yearValues.map((value) => {
+                    {yearValues.map((value: MetricValue) => {
                       const monthName = new Date(year, value.month - 1).toLocaleDateString('en-US', { month: 'short' });
                       
                       return (
