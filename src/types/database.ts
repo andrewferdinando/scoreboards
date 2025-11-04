@@ -1,65 +1,40 @@
-// Database types matching the Supabase schema
+// Database types matching the correct Supabase schema
 
-export interface Player {
+export interface Brand {
   id: string;
   name: string;
-  email: string | null;
-  avatar_url: string | null;
   created_at: string;
-  updated_at: string;
 }
 
-export interface Game {
+export interface Profile {
+  id: string; // matches auth.users.id
+  email: string;
+  created_at: string;
+}
+
+export interface BrandMembership {
+  brand_id: string;
+  user_id: string;
+  role: 'owner' | 'admin' | 'member';
+}
+
+export interface Metric {
   id: string;
+  brand_id: string;
   name: string;
-  description: string | null;
-  icon_url: string | null;
-  is_active: boolean;
+  data_source: string | null;
   created_at: string;
-  updated_at: string;
 }
 
-export interface Score {
+export interface MetricValue {
   id: string;
-  player_id: string;
-  game_id: string;
-  score: number;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
+  metric_id: string;
+  year: number;
+  month: number; // 1-12
+  value: number;
 }
 
-export interface LeaderboardEntry {
-  id: string;
-  game_id: string;
-  game_name: string;
-  player_id: string;
-  player_name: string;
-  avatar_url: string | null;
-  score: number;
-  created_at: string;
-  rank: number;
+export interface UserBrandAccess {
+  brand_id: string;
+  user_id: string;
 }
-
-export interface PlayerStats {
-  player_id: string;
-  player_name: string;
-  games_played: number;
-  total_scores: number;
-  highest_score: number | null;
-  average_score: number | null;
-  first_score_at: string | null;
-  latest_score_at: string | null;
-}
-
-export interface GameStats {
-  game_id: string;
-  game_name: string;
-  unique_players: number;
-  total_scores: number;
-  highest_score: number | null;
-  average_score: number | null;
-  first_score_at: string | null;
-  latest_score_at: string | null;
-}
-
