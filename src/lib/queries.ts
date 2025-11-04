@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from './supabase';
+import { supabaseAdmin } from './supabase';
 import type { Brand, Metric, MetricValue } from '../types/database';
 
 // Get all brands for the current user

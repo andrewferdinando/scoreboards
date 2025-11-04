@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import type { Brand, Metric } from '@/types/database';
@@ -20,7 +19,6 @@ interface ScoreboardContentProps {
 }
 
 export function ScoreboardContent({ brands, allMetricValues }: ScoreboardContentProps) {
-  const router = useRouter();
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
 
   const handleMetricAdded = () => {
