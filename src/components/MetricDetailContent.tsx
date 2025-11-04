@@ -178,18 +178,18 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
           <table className="table">
             <thead className="table-header">
               <tr>
-                <th className="table-cell table-cell-header text-left" style={{ minWidth: '120px' }}></th>
+                <th className="table-cell table-cell-header text-left" style={{ minWidth: '80px', width: '80px' }}></th>
                 {months.map((month) => (
                   <th
                     key={month.num}
                     className="table-cell table-cell-header text-center"
-                    style={{ minWidth: '100px' }}
+                    style={{ minWidth: '60px', width: '60px' }}
                   >
                     {month.short}
                   </th>
                 ))}
                 {showYTD && (
-                  <th className="table-cell table-cell-header text-center" style={{ minWidth: '100px' }}>
+                  <th className="table-cell table-cell-header text-center" style={{ minWidth: '80px', width: '80px' }}>
                     YTD
                   </th>
                 )}

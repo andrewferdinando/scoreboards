@@ -197,12 +197,12 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
               <table className="table">
                 <thead className="table-header">
                   <tr>
-                    <th className="table-cell table-cell-header text-left" style={{ minWidth: '200px' }}>Metric</th>
+                    <th className="table-cell table-cell-header text-left" style={{ minWidth: '150px', width: '150px' }}>Metric</th>
                     {months.map((month) => (
                       <th
                         key={month.num}
                         className="table-cell table-cell-header text-center"
-                        style={{ minWidth: '100px' }}
+                        style={{ minWidth: '60px', width: '60px' }}
                       >
                         {month.short}
                       </th>
