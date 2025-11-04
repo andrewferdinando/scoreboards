@@ -90,3 +90,33 @@ export async function getBrandMetricsWithLatestValues(brandId: string) {
   return metricsWithValues;
 }
 
+// Get all metric values for a specific year, organized by metric_id -> year -> month
+export async function getAllMetricValuesForYear(year: number) {
+  const { data, error } = await supabase
+    .from('metric_values')
+    .select('metric_id, year, month, value')
+    .eq('year', year)
+    .order('metric_id')
+    .order('month');
+
+  if (error) {
+    console.error('Error fetching metric values:', error);
+    return {};
+  }
+
+  // Organize as: metric_id -> year -> month -> value
+  const organized: Record<string, Record<number, Record<number, number>>> = {};
+  
+  (data || []).forEach((item) => {
+    if (!organized[item.metric_id]) {
+      organized[item.metric_id] = {};
+    }
+    if (!organized[item.metric_id][item.year]) {
+      organized[item.metric_id][item.year] = {};
+    }
+    organized[item.metric_id][item.year][item.month] = Number(item.value);
+  });
+
+  return organized;
+}
+
