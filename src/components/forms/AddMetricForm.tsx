@@ -53,15 +53,22 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
     }
 
     try {
-      const { error: insertError } = await supabase
-        .from('metrics')
-        .insert({
+      const response = await fetch('/api/metrics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           brand_id: brandId,
           name: name.trim(),
           data_source: dataSource.trim() || null,
-        });
+        }),
+      });
 
-      if (insertError) throw insertError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create metric');
+      }
 
       onSuccess();
       onClose();

@@ -59,35 +59,45 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
     try {
       if (numericValue === null || isNaN(numericValue)) {
         // Delete the value if empty
-        const { error } = await supabase
-          .from('metric_values')
-          .delete()
-          .eq('metric_id', metricId)
-          .eq('year', year)
-          .eq('month', month);
+        const response = await fetch(
+          `/api/metric-values?metric_id=${metricId}&year=${year}&month=${month}`,
+          {
+            method: 'DELETE',
+          }
+        );
 
-        if (error) throw error;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to delete value');
+        }
       } else {
         // Upsert the value
-        const { error } = await supabase
-          .from('metric_values')
-          .upsert({
+        const response = await fetch('/api/metric-values', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             metric_id: metricId,
             year,
             month,
             value: numericValue,
-          }, {
-            onConflict: 'metric_id,year,month',
-          });
+          }),
+        });
 
-        if (error) throw error;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save value');
+        }
       }
 
       onSave();
     } catch (error) {
       console.error('Error saving value:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save value';
       // Revert to original value on error
       setEditValue(value?.toString() || '');
+      alert(errorMessage); // Show error to user
     } finally {
       setIsSaving(false);
     }
