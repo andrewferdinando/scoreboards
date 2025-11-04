@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { EditableCell } from './EditableCell';
@@ -14,6 +14,38 @@ interface MetricDetailContentProps {
 export function MetricDetailContent({ metric, values }: MetricDetailContentProps) {
   const router = useRouter();
   const [showYTD, setShowYTD] = useState(true);
+  
+  // Get available years (2023 to current year - automatically includes new year on Jan 1st)
+  const currentYear = new Date().getFullYear();
+  
+  // Available years for selection (2023 to current year)
+  const availableYears = useMemo(() => {
+    const years: number[] = [];
+    for (let year = 2023; year <= currentYear; year++) {
+      years.push(year);
+    }
+    return years;
+  }, [currentYear]);
+  
+  // Selected years state (default to all available years)
+  const [selectedYears, setSelectedYears] = useState<number[]>([]);
+  
+  // Initialize and update selected years when available years change
+  useEffect(() => {
+    setSelectedYears(prev => {
+      // Initialize with all available years if empty
+      if (prev.length === 0) {
+        return availableYears;
+      }
+      // If new year was added, include it in selection
+      const newYear = availableYears.find(year => !prev.includes(year));
+      if (newYear) {
+        return [...prev, newYear];
+      }
+      // Filter out years that are no longer available
+      return prev.filter(year => availableYears.includes(year));
+    });
+  }, [availableYears]);
 
   const handleValueSaved = () => {
     router.refresh();
@@ -46,12 +78,13 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
     return grouped;
   }, [values]);
 
-  // Get all years, sorted descending
+  // Get all years from data, sorted descending, filtered by selected years
   const years = useMemo(() => {
     return Object.keys(valuesByYear)
       .map(Number)
+      .filter(year => selectedYears.includes(year))
       .sort((a, b) => b - a);
-  }, [valuesByYear]);
+  }, [valuesByYear, selectedYears]);
 
   // Calculate YTD for each year
   const calculateYTD = (year: number): number => {
@@ -97,7 +130,52 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
             Back to Scoreboards
           </Link>
           
-          <h1 className="text-3xl font-bold text-gray-900">Scoreboard</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">{metric.name}</h1>
+            
+            {/* Year Multi-Select Dropdown */}
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-gray-500 font-medium">Years</label>
+                <div className="relative">
+                  <select
+                    multiple
+                    value={selectedYears.map(String)}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.selectedOptions, option => Number(option.value));
+                      setSelectedYears(selected);
+                    }}
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[120px]"
+                    size={Math.min(availableYears.length, 4)}
+                  >
+                    {availableYears.map(year => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <span className="text-xs text-gray-400">Hold Ctrl/Cmd to multi-select</span>
+              </div>
+              
+              {/* YTD Toggle - Always visible */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700 font-medium">YTD</span>
+                <button
+                  onClick={() => setShowYTD(!showYTD)}
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    showYTD ? 'bg-primary-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 rounded-full bg-white transition-transform ${
+                      showYTD ? 'translate-x-5' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Table */}
@@ -115,35 +193,11 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
                   </th>
                 ))}
                 {showYTD && (
-                  <>
-                    <th className="text-center p-4 font-semibold text-gray-700 min-w-[80px]">
-                      YTD
-                    </th>
-                  </>
+                  <th className="text-center p-4 font-semibold text-gray-700 min-w-[80px]">
+                    YTD
+                  </th>
                 )}
               </tr>
-              {showYTD && (
-                <tr>
-                  <th className="text-left p-4"></th>
-                  <th colSpan={11} className="text-right p-2 text-xs text-gray-500">
-                    Year to date
-                  </th>
-                  <th className="p-2">
-                    <button
-                      onClick={() => setShowYTD(!showYTD)}
-                      className={`w-10 h-6 rounded-full transition-colors ${
-                        showYTD ? 'bg-primary-600' : 'bg-gray-300'
-                      }`}
-                    >
-                      <span
-                        className={`block w-4 h-4 rounded-full bg-white transition-transform ${
-                          showYTD ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </th>
-                </tr>
-              )}
             </thead>
             <tbody>
               {years.length === 0 ? (
