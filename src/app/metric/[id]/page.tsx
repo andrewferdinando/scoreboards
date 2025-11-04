@@ -115,7 +115,7 @@ export default async function MetricPage({ params }: MetricPageProps) {
         ) : (
           <div className="space-section">
             {years.map((year) => {
-              const yearValues = valuesByYear[year].sort((a, b) => b.month - a.month);
+              const yearValues = valuesByYear[year].sort((a: MetricValue, b: MetricValue) => b.month - a.month);
               
               return (
                 <Card key={year} className="p-6 lg:p-8">
