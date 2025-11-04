@@ -127,3 +127,41 @@ export async function getAllMetricValuesForYear(year: number) {
   return organized;
 }
 
+// Get all metric values for years 2023-2025 (or current year if > 2025)
+// Organized as: metric_id -> year -> month -> value
+export async function getAllMetricValuesForYears() {
+  const currentYear = new Date().getFullYear();
+  const startYear = 2023;
+  const endYear = Math.max(currentYear, 2025); // At least up to 2025
+  
+  // Using admin client to bypass RLS until auth is set up
+  const { data, error } = await supabaseAdmin
+    .from('metric_values')
+    .select('metric_id, year, month, value')
+    .gte('year', startYear)
+    .lte('year', endYear)
+    .order('metric_id')
+    .order('year')
+    .order('month');
+
+  if (error) {
+    console.error('Error fetching metric values:', error);
+    return {};
+  }
+
+  // Organize as: metric_id -> year -> month -> value
+  const organized: Record<string, Record<number, Record<number, number>>> = {};
+  
+  (data || []).forEach((item) => {
+    if (!organized[item.metric_id]) {
+      organized[item.metric_id] = {};
+    }
+    if (!organized[item.metric_id][item.year]) {
+      organized[item.metric_id][item.year] = {};
+    }
+    organized[item.metric_id][item.year][item.month] = Number(item.value);
+  });
+
+  return organized;
+}
+

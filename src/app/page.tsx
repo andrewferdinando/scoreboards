@@ -1,4 +1,4 @@
-import { getUserBrands, getBrandMetricsWithLatestValues, getAllMetricValuesForYear } from '@/lib/queries';
+import { getUserBrands, getBrandMetricsWithLatestValues, getAllMetricValuesForYears } from '@/lib/queries';
 import { ScoreboardContent } from '@/components/ScoreboardContent';
 
 // Force dynamic rendering to prevent caching
@@ -7,7 +7,6 @@ export const revalidate = 0;
 
 export default async function ScoreboardPage() {
   const brands = await getUserBrands();
-  const currentYear = new Date().getFullYear();
 
   // Get metrics for each brand
   const brandsWithMetrics = await Promise.all(
@@ -20,8 +19,8 @@ export default async function ScoreboardPage() {
     })
   );
 
-  // Get all metric values for the current year
-  const allMetricValues = await getAllMetricValuesForYear(currentYear);
+  // Get all metric values for years 2023-2025 (or current year if > 2025)
+  const allMetricValues = await getAllMetricValuesForYears();
 
   return <ScoreboardContent brands={brandsWithMetrics} allMetricValues={allMetricValues} />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
@@ -22,7 +22,30 @@ interface ScoreboardContentProps {
 export function ScoreboardContent({ brands: initialBrands, allMetricValues: initialMetricValues }: ScoreboardContentProps) {
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
   const [metricValues, setMetricValues] = useState(initialMetricValues);
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
+  
+  // Available years for selection (2023 to current year, at least up to 2025)
+  const availableYears = [2023, 2024, 2025];
+  if (currentYear > 2025) {
+    for (let year = 2026; year <= currentYear; year++) {
+      availableYears.push(year);
+    }
+  }
+  
+  // Filter metric values for the selected year
+  const filteredMetricValues = useMemo(() => {
+    const filtered: Record<string, Record<number, Record<number, number>>> = {};
+    Object.keys(metricValues).forEach(metricId => {
+      if (metricValues[metricId][selectedYear]) {
+        filtered[metricId] = {
+          [selectedYear]: metricValues[metricId][selectedYear]
+        };
+      }
+    });
+    return filtered;
+  }, [metricValues, selectedYear]);
 
   const handleMetricAdded = () => {
     // Force a full page reload to ensure fresh data is fetched
@@ -79,8 +102,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     { num: 12, short: 'Dec' },
   ];
 
-  const currentYear = new Date().getFullYear();
-
   // Get all metrics across all brands for the scoreboard
   const allMetrics = brands.flatMap(brand => 
     brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
@@ -93,12 +114,33 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-900">Scoreboard</h1>
-            <button
-              onClick={() => setShowAddMetricForm(true)}
-              className="btn-secondary border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium"
-            >
-              Add Metric
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Year Selector */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="year-select" className="text-sm font-medium text-gray-700">
+                  Year:
+                </label>
+                <select
+                  id="year-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <button
+                onClick={() => setShowAddMetricForm(true)}
+                className="btn-secondary border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium"
+              >
+                Add Metric
+              </button>
+            </div>
           </div>
 
           {/* Table */}
@@ -145,7 +187,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                       </td>
                       <td className="p-4 text-gray-600 text-sm">{metric.data_source || '-'}</td>
                       {months.map((month) => {
-                        const value = metricValues[metric.id]?.[currentYear]?.[month.num] || null;
+                        const value = filteredMetricValues[metric.id]?.[selectedYear]?.[month.num] || null;
                         return (
                           <td
                             key={month.num}
@@ -153,7 +195,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                           >
                             <EditableCell
                               metricId={metric.id}
-                              year={currentYear}
+                              year={selectedYear}
                               month={month.num}
                               value={value}
                               onSave={handleValueSaved}
