@@ -104,3 +104,4 @@ for update using (
           where m.id = metric_values.metric_id and bm.user_id = auth.uid())
 );
 
+
