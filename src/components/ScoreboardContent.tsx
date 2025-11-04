@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Link from 'next/link';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import type { Brand, Metric } from '@/types/database';
@@ -134,7 +135,14 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                       key={metric.id}
                       className={`border-b border-gray-200 ${metricIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                     >
-                      <td className="p-4 text-gray-900 font-medium">{metric.name}</td>
+                      <td className="p-4">
+                        <Link 
+                          href={`/metric/${metric.id}`}
+                          className="text-gray-900 font-medium hover:text-primary-600 hover:underline transition-colors"
+                        >
+                          {metric.name}
+                        </Link>
+                      </td>
                       <td className="p-4 text-gray-600 text-sm">{metric.data_source || '-'}</td>
                       {months.map((month) => {
                         const value = metricValues[metric.id]?.[currentYear]?.[month.num] || null;
