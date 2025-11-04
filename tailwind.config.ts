@@ -120,7 +120,7 @@ const config: Config = {
         "body": ["14px", { lineHeight: "1.6", fontWeight: "400" }],
         "body-sm": ["13px", { lineHeight: "1.5", fontWeight: "400" }],
         "caption": ["12px", { lineHeight: "1.4", fontWeight: "500" }],
-        "label": ["11px", { lineHeight: "1.4", fontWeight: "600", letterSpacing: "0.05em", textTransform: "uppercase" }],
+        "label": ["11px", { lineHeight: "1.4", fontWeight: "600", letterSpacing: "0.05em" }],
       },
       transitionTimingFunction: {
         "fast": "cubic-bezier(0.4, 0, 0.2, 1)",

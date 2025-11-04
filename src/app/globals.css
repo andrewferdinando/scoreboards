@@ -540,9 +540,11 @@
 
   /* Label */
   .label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     display: block;
-    font-size: var(--text-body-size);
-    font-weight: 500;
+    font-size: var(--text-label-size);
+    font-weight: 600;
     color: var(--color-neutral-700);
     margin-bottom: var(--space-2);
   }
