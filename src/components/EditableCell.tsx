@@ -97,6 +97,8 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
         }
       }
 
+      // Small delay to ensure save completes before reload
+      await new Promise(resolve => setTimeout(resolve, 100));
       onSave();
     } catch (error) {
       console.error('Error saving value:', error);
@@ -104,7 +106,6 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
       // Revert to original value on error
       setEditValue(value?.toString() || '');
       alert(errorMessage); // Show error to user
-    } finally {
       setIsSaving(false);
     }
   };
