@@ -103,6 +103,11 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     { num: 12, short: 'DEC' },
   ];
   
+  // Get all metrics across all brands for the scoreboard
+  const allMetrics = brands.flatMap(brand => 
+    brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
+  );
+
   // Group metrics by name for display
   const groupedMetrics = useMemo(() => {
     const grouped: Record<string, typeof allMetrics> = {};
@@ -114,11 +119,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     });
     return grouped;
   }, [allMetrics]);
-
-  // Get all metrics across all brands for the scoreboard
-  const allMetrics = brands.flatMap(brand => 
-    brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
-  );
 
   // Get first brand for display (in real app, this would be selected)
   const selectedBrand = brands[0];
