@@ -50,7 +50,18 @@ export function Modal({
         className={`modal-content ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">{title}</div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="modal-header mb-0">{title}</div>
+          <button
+            onClick={onClose}
+            className="text-neutral-400 hover:text-neutral-600 transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
         <div>{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
       </div>

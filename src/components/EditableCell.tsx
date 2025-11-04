@@ -123,7 +123,7 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
 
   return (
     <div
-      className="table-cell text-center cursor-pointer hover:bg-neutral-50 transition-colors"
+      className="p-3 text-center cursor-pointer hover:bg-neutral-50 transition-colors"
       onClick={handleClick}
     >
       {isEditing ? (

@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Brand } from '@/types/database';
+import { Modal } from '@/components/ui/Modal';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Button } from '@/components/ui/Button';
 
 interface AddMetricFormProps {
   brands: Brand[];
@@ -93,114 +97,80 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="card max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold">Add New Metric</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 rounded-xl bg-error-50 border border-error-200 text-error-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Metric created successfully! Refreshing...</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="brand" className="label label-required">
-                Brand
-              </label>
-              {loadingBrands ? (
-                <div className="input">Loading brands...</div>
-              ) : brands.length === 0 ? (
-                <div className="input text-error-600">
-                  No brands found. Please create a brand in Supabase first.
-                </div>
-              ) : (
-                <select
-                  id="brand"
-                  value={brandId}
-                  onChange={(e) => setBrandId(e.target.value)}
-                  className="input"
-                  required
-                >
-                  {brands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="name" className="label label-required">
-                Metric Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="input"
-                placeholder="e.g., Website Visitors"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="dataSource" className="label">
-                Data Source
-              </label>
-              <input
-                id="dataSource"
-                type="text"
-                value={dataSource}
-                onChange={(e) => setDataSource(e.target.value)}
-                className="input"
-                placeholder="e.g., Google Analytics"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn-secondary flex-1"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn-primary flex-1"
-                disabled={isLoading || success || brands.length === 0}
-              >
-                {isLoading ? 'Creating...' : success ? 'Created!' : 'Create Metric'}
-              </button>
-            </div>
-          </form>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Add New Metric"
+      className="max-w-md"
+      footer={
+        <div className="flex gap-3">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            form="add-metric-form"
+            disabled={isLoading || success || brands.length === 0}
+          >
+            {isLoading ? 'Creating...' : success ? 'Created!' : 'Create Metric'}
+          </Button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 text-error-600 text-body-sm">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 p-3 rounded-lg bg-success-50 border border-success-200 text-success-600 text-body-sm flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Metric created successfully! Refreshing...</span>
+        </div>
+      )}
+
+      <form id="add-metric-form" onSubmit={handleSubmit} className="space-y-4">
+        {loadingBrands ? (
+          <div className="input">Loading brands...</div>
+        ) : brands.length === 0 ? (
+          <div className="p-4 rounded-lg bg-error-50 border border-error-200 text-error-600 text-body-sm">
+            No brands found. Please create a brand in Supabase first.
+          </div>
+        ) : (
+          <Select
+            label="Brand"
+            options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
+            value={brandId}
+            onChange={(e) => setBrandId(e.target.value)}
+            required
+          />
+        )}
+
+        <Input
+          label="Metric Name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Website Visitors"
+          required
+        />
+
+        <Input
+          label="Data Source"
+          type="text"
+          value={dataSource}
+          onChange={(e) => setDataSource(e.target.value)}
+          placeholder="e.g., Google Analytics"
+        />
+      </form>
+    </Modal>
   );
 }

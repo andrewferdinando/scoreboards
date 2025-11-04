@@ -18,17 +18,21 @@ export function Select({
   error,
   placeholder,
   className = '',
+  id,
   ...props
 }: SelectProps) {
+  const selectId = id || (label ? `select-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+  
   return (
     <div className="w-full">
       {label && (
-        <label className="label">
+        <label htmlFor={selectId} className="label">
           {label}
           {props.required && <span className="text-error-500 ml-1">*</span>}
         </label>
       )}
       <select
+        id={selectId}
         className={`input ${error ? 'border-error-500 focus:ring-error-500/20' : ''} ${className}`}
         {...props}
       >

@@ -13,6 +13,7 @@ export function Button({
   children,
   icon,
   className = '',
+  type = 'button',
   ...props
 }: ButtonProps) {
   const baseClasses = 'inline-flex items-center justify-center gap-2 font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
@@ -31,6 +32,7 @@ export function Button({
   
   return (
     <button
+      type={type}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       {...props}
     >

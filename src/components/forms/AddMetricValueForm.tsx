@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Modal } from '@/components/ui/Modal';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Button } from '@/components/ui/Button';
 
 interface AddMetricValueFormProps {
   metricId: string;
@@ -67,103 +71,71 @@ export function AddMetricValueForm({ metricId, initialYear, initialMonth, onSucc
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="card max-w-md w-full">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold">Add Metric Value</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 rounded-xl bg-error-50 border border-error-200 text-error-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="year" className="label label-required">
-                  Year
-                </label>
-                <input
-                  id="year"
-                  type="number"
-                  value={year}
-                  onChange={(e) => setYear(parseInt(e.target.value))}
-                  className="input"
-                  min="2000"
-                  max="2100"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="month" className="label label-required">
-                  Month
-                </label>
-                <select
-                  id="month"
-                  value={month}
-                  onChange={(e) => setMonth(parseInt(e.target.value))}
-                  className="input"
-                  required
-                >
-                  {months.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="value" className="label label-required">
-                Value
-              </label>
-              <input
-                id="value"
-                type="number"
-                step="any"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="input"
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn-secondary flex-1"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn-primary flex-1"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Adding...' : 'Add Value'}
-              </button>
-            </div>
-          </form>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Add Metric Value"
+      className="max-w-md"
+      footer={
+        <div className="flex gap-3">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            form="add-metric-value-form"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Adding...' : 'Add Value'}
+          </Button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-error-50 border border-error-200 text-error-600 text-body-sm">
+          {error}
+        </div>
+      )}
+
+      <form id="add-metric-value-form" onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Year"
+            type="number"
+            value={year}
+            onChange={(e) => setYear(parseInt(e.target.value))}
+            min="2000"
+            max="2100"
+            required
+            numeric
+          />
+
+          <Select
+            label="Month"
+            options={months.map(m => ({ value: m.value.toString(), label: m.label }))}
+            value={month.toString()}
+            onChange={(e) => setMonth(parseInt(e.target.value))}
+            required
+          />
+        </div>
+
+        <Input
+          label="Value"
+          type="number"
+          step="any"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="0.00"
+          required
+          numeric
+        />
+      </form>
+    </Modal>
   );
 }
 
