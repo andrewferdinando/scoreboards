@@ -16,6 +16,13 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
   const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Sync editValue when value prop changes (e.g., after reload)
+  useEffect(() => {
+    if (!isEditing) {
+      setEditValue(value?.toString() || '');
+    }
+  }, [value, isEditing]);
+
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -116,7 +123,7 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="w-full text-center border-2 border-primary-500 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full text-center border-2 border-primary-500 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           disabled={isSaving}
         />
       ) : (
