@@ -44,12 +44,17 @@ export async function getUser() {
 // Get the current session
 export async function getSession() {
   const supabase = await createClient();
-  const { data: { session }, error } = await supabase.auth.getSession();
   
-  if (error || !session) {
+  // Use getUser() instead of getSession() for server-side
+  // This ensures the session is properly validated
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
     return null;
   }
   
+  // Get session after user is confirmed
+  const { data: { session } } = await supabase.auth.getSession();
   return session;
 }
 

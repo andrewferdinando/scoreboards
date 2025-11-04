@@ -61,6 +61,7 @@ export default function LoginPage() {
 
       if (session) {
         sessionStorage.setItem('login_debug', JSON.stringify({ step: 'redirecting' }));
+        // Use router.push instead of window.location to allow middleware to handle session sync
         window.location.href = '/';
       } else {
         setError('Session not established. Please try again.');
