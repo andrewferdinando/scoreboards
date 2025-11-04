@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
@@ -88,57 +88,94 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   }, []);
 
   const months = [
-    { num: 1, short: 'Jan' },
-    { num: 2, short: 'Feb' },
-    { num: 3, short: 'March' },
-    { num: 4, short: 'April' },
-    { num: 5, short: 'May' },
-    { num: 6, short: 'June' },
-    { num: 7, short: 'July' },
-    { num: 8, short: 'August' },
-    { num: 9, short: 'Sept' },
-    { num: 10, short: 'Oct' },
-    { num: 11, short: 'Nov' },
-    { num: 12, short: 'Dec' },
+    { num: 1, short: 'JAN' },
+    { num: 2, short: 'FEB' },
+    { num: 3, short: 'MAR' },
+    { num: 4, short: 'APR' },
+    { num: 5, short: 'MAY' },
+    { num: 6, short: 'JUN' },
+    { num: 7, short: 'JUL' },
+    { num: 8, short: 'AUG' },
+    { num: 9, short: 'SEP' },
+    { num: 10, short: 'OCT' },
+    { num: 11, short: 'NOV' },
+    { num: 12, short: 'DEC' },
   ];
+  
+  // Group metrics by name for display
+  const groupedMetrics = useMemo(() => {
+    const grouped: Record<string, typeof allMetrics> = {};
+    allMetrics.forEach(metric => {
+      if (!grouped[metric.name]) {
+        grouped[metric.name] = [];
+      }
+      grouped[metric.name].push(metric);
+    });
+    return grouped;
+  }, [allMetrics]);
 
   // Get all metrics across all brands for the scoreboard
   const allMetrics = brands.flatMap(brand => 
     brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
   );
 
+  // Get first brand for display (in real app, this would be selected)
+  const selectedBrand = brands[0];
+  
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
-        <div className="container-custom section">
-          {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">Scoreboard</h1>
-            <div className="flex items-center gap-4">
-              {/* Year Selector */}
-              <div className="flex items-center gap-2">
-                <label htmlFor="year-select" className="text-sm font-medium text-gray-700">
-                  Year:
-                </label>
-                <select
-                  id="year-select"
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  {availableYears.map(year => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      <div className="min-h-screen bg-bg-base">
+        {/* Top Header Bar */}
+        <div className="border-b border-border-default bg-white">
+          <div className="container-custom">
+            <div className="flex items-center justify-between h-16">
+              {/* Brand Selector */}
+              <button className="flex items-center gap-2 px-4 py-2 text-body font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
+                <span>{selectedBrand?.name || 'Select Brand'}</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
               
+              {/* Avatar */}
+              <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center text-body-sm font-medium text-neutral-700">
+                JD
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="container-custom section">
+          {/* Breadcrumb */}
+          <div className="mb-2">
+            <nav className="text-body-sm text-neutral-500">
+              <span>Home</span>
+              <span className="mx-2">/</span>
+              <span className="text-neutral-700">Scoreboard</span>
+            </nav>
+          </div>
+          
+          {/* Page Header */}
+          <div className="mb-8 flex items-center justify-between">
+            <h1 className="text-h1 font-bold text-neutral-900">Scoreboard</h1>
+            <div className="flex items-center gap-4">
+              {/* Year Selector Button */}
+              <button
+                onClick={() => {/* TODO: Open dropdown */}}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-border-default rounded-md text-body font-medium text-neutral-700 hover:border-primary-600 hover:text-primary-600 transition-colors"
+              >
+                <span>{selectedYear}</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {/* Add Button */}
               <button
                 onClick={() => setShowAddMetricForm(true)}
-                className="btn-secondary border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium"
+                className="button-primary"
               >
-                Add Metric
+                + Add
               </button>
             </div>
           </div>
@@ -146,25 +183,25 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
           {/* Table */}
           {allMetrics.length === 0 ? (
             <div className="card p-12 text-center">
-              <p className="text-gray-500 mb-4">No metrics found.</p>
+              <p className="text-neutral-500 mb-4">No metrics found.</p>
               <button
                 onClick={() => setShowAddMetricForm(true)}
-                className="btn-primary"
+                className="button-primary"
               >
                 Add Your First Metric
               </button>
             </div>
           ) : (
-            <div className="card overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left p-4 font-semibold text-gray-700">Metric</th>
-                    <th className="text-left p-4 font-semibold text-gray-700">Data Source</th>
+            <div className="card overflow-x-auto p-0">
+              <table className="table">
+                <thead className="table-header">
+                  <tr>
+                    <th className="table-cell table-cell-header text-left" style={{ minWidth: '200px' }}>Metric</th>
                     {months.map((month) => (
                       <th
                         key={month.num}
-                        className="text-center p-4 font-semibold text-gray-700 min-w-[80px]"
+                        className="table-cell table-cell-header text-center"
+                        style={{ minWidth: '100px' }}
                       >
                         {month.short}
                       </th>
@@ -172,51 +209,57 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                   </tr>
                 </thead>
                 <tbody>
-                  {allMetrics.map((metric, metricIndex) => (
-                    <tr
-                      key={metric.id}
-                      className={`border-b border-gray-200 ${metricIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
-                    >
-                      <td className="p-4">
-                        <Link 
-                          href={`/metric/${metric.id}`}
-                          className="text-gray-900 font-medium hover:text-primary-600 hover:underline transition-colors"
-                        >
-                          {metric.name}
-                        </Link>
-                      </td>
-                      <td className="p-4 text-gray-600 text-sm">{metric.data_source || '-'}</td>
-                      {months.map((month) => {
-                        const value = filteredMetricValues[metric.id]?.[selectedYear]?.[month.num] || null;
+                  {Object.entries(groupedMetrics).map(([metricName, metricsGroup]) => (
+                    <React.Fragment key={metricName}>
+                      {metricsGroup.map((metric, metricIndex) => {
+                        const isFirstInGroup = metricIndex === 0;
                         return (
-                          <td
-                            key={month.num}
-                            className="border-b border-gray-200"
+                          <tr
+                            key={metric.id}
+                            className="border-b border-border-grid"
                           >
-                            <EditableCell
-                              metricId={metric.id}
-                              year={selectedYear}
-                              month={month.num}
-                              value={value}
-                              onSave={handleValueSaved}
-                            />
-                          </td>
+                            <td className="table-cell">
+                              {isFirstInGroup ? (
+                                <div>
+                                  <Link 
+                                    href={`/metric/${metric.id}`}
+                                    className="text-neutral-900 font-semibold text-body hover:text-primary-600 transition-colors block"
+                                  >
+                                    {metric.name}
+                                  </Link>
+                                  {metric.data_source && (
+                                    <div className="text-body-sm text-neutral-500 mt-1">
+                                      {metric.data_source}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-body-sm text-neutral-500">
+                                  {metric.data_source || '-'}
+                                </div>
+                              )}
+                            </td>
+                            {months.map((month) => {
+                              const value = filteredMetricValues[metric.id]?.[selectedYear]?.[month.num] || null;
+                              return (
+                                <td
+                                  key={month.num}
+                                  className="table-cell table-cell-numeric"
+                                >
+                                  <EditableCell
+                                    metricId={metric.id}
+                                    year={selectedYear}
+                                    month={month.num}
+                                    value={value}
+                                    onSave={handleValueSaved}
+                                  />
+                                </td>
+                              );
+                            })}
+                          </tr>
                         );
                       })}
-                    </tr>
-                  ))}
-                  {/* Empty rows for adding more metrics */}
-                  {Array.from({ length: 3 }).map((_, rowIndex) => (
-                    <tr
-                      key={`empty-${rowIndex}`}
-                      className={`border-b border-gray-200 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
-                    >
-                      <td className="p-4 text-gray-400">-</td>
-                      <td className="p-4 text-gray-400">-</td>
-                      {months.map((month) => (
-                        <td key={month.num} className="p-4 text-center text-gray-300">-</td>
-                      ))}
-                    </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

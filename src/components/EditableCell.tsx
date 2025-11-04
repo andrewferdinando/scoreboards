@@ -2,6 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 
+// Format number with space as thousands separator (e.g., 12300 -> "12 300")
+function formatNumber(value: number): string {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
 interface EditableCellProps {
   metricId: string;
   year: number;
@@ -118,7 +123,7 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
 
   return (
     <div
-      className="p-4 text-center cursor-pointer hover:bg-primary-50 transition-colors"
+      className="table-cell text-center cursor-pointer hover:bg-neutral-50 transition-colors"
       onClick={handleClick}
     >
       {isEditing ? (
@@ -130,11 +135,11 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="w-full text-center border-2 border-primary-500 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-full text-center border-2 border-primary-600 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-600/20 font-mono tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
       ) : (
-        <span className="text-gray-900 font-medium">
-          {displayValue !== null ? (typeof displayValue === 'number' ? displayValue.toLocaleString() : displayValue) : '-'}
+        <span className="text-neutral-700 font-medium font-mono tabular-nums">
+          {displayValue !== null ? (typeof displayValue === 'number' ? formatNumber(displayValue) : displayValue) : '—'}
         </span>
       )}
     </div>
