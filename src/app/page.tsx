@@ -1,6 +1,10 @@
 import { getUserBrands, getBrandMetricsWithLatestValues, getAllMetricValuesForYear } from '@/lib/queries';
 import { ScoreboardContent } from '@/components/ScoreboardContent';
 
+// Force dynamic rendering to prevent caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ScoreboardPage() {
   const brands = await getUserBrands();
   const currentYear = new Date().getFullYear();
