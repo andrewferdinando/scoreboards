@@ -20,24 +20,30 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      console.log('Attempting to sign in...');
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Sign in response:', { data, error: signInError });
+
       if (signInError) {
+        console.error('Sign in error:', signInError);
         throw signInError;
       }
 
       if (data.user) {
+        console.log('Sign in successful, redirecting...');
         // Redirect to home page
-        router.push('/');
-        router.refresh();
+        window.location.href = '/';
+      } else {
+        throw new Error('No user data returned');
       }
     } catch (err) {
+      console.error('Sign in failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign in';
       setError(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };
