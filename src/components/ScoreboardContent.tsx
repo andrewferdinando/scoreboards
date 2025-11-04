@@ -24,11 +24,13 @@ export function ScoreboardContent({ brands, allMetricValues }: ScoreboardContent
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
 
   const handleMetricAdded = () => {
-    router.refresh();
+    // Force a full page reload to ensure data is fetched
+    window.location.reload();
   };
 
   const handleValueSaved = () => {
-    router.refresh();
+    // Force a full page reload to ensure data is fetched
+    window.location.reload();
   };
 
   const months = [
