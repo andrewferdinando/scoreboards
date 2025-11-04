@@ -21,7 +21,7 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
 
   // Fetch brands client-side as fallback
   useEffect(() => {
-    if (brands.length === 0) {
+    if (initialBrands.length === 0) {
       setLoadingBrands(true);
       supabase
         .from('brands')
@@ -37,9 +37,10 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
           setLoadingBrands(false);
         });
     } else {
-      setBrandId(brands[0]?.id || '');
+      setBrands(initialBrands);
+      setBrandId(initialBrands[0]?.id || '');
     }
-  }, [brands.length]);
+  }, [initialBrands]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
