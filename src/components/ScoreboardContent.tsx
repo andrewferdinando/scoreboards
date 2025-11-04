@@ -21,7 +21,7 @@ interface ScoreboardContentProps {
 export function ScoreboardContent({ brands: initialBrands, allMetricValues: initialMetricValues }: ScoreboardContentProps) {
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
   const [metricValues, setMetricValues] = useState(initialMetricValues);
-  const [brands, setBrands] = useState(initialBrands);
+  const brands = initialBrands;
 
   const handleMetricAdded = () => {
     // Force a full page reload to ensure fresh data is fetched
@@ -41,15 +41,18 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
       }
       if (value === null) {
         // Remove the value if it's null
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [month]: _, ...rest } = newValues[metricId][year];
         newValues[metricId][year] = rest;
         // Clean up empty year object
         if (Object.keys(newValues[metricId][year]).length === 0) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [year]: __, ...restYear } = newValues[metricId];
           newValues[metricId] = restYear;
         }
         // Clean up empty metric object
         if (Object.keys(newValues[metricId]).length === 0) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [metricId]: ___, ...restMetric } = newValues;
           return restMetric;
         }
