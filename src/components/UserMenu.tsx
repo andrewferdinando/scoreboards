@@ -79,7 +79,6 @@ export function UserMenu() {
     return 'U';
   };
 
-  const displayName = profile?.name || user?.email || 'User';
 
   if (isLoading) {
     return (
