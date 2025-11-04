@@ -13,7 +13,7 @@ interface MetricDetailContentProps {
 
 export function MetricDetailContent({ metric, values }: MetricDetailContentProps) {
   const router = useRouter();
-  const [showYTD, setShowYTD] = useState(true);
+  const [showYTD, setShowYTD] = useState(false);
   
   // Get available years (2023 to current year - automatically includes new year on Jan 1st)
   const currentYear = new Date().getFullYear();
@@ -52,18 +52,18 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
   };
 
   const months = [
-    { num: 1, short: 'Jan' },
-    { num: 2, short: 'Feb' },
-    { num: 3, short: 'March' },
-    { num: 4, short: 'April' },
-    { num: 5, short: 'May' },
-    { num: 6, short: 'June' },
-    { num: 7, short: 'July' },
-    { num: 8, short: 'August' },
-    { num: 9, short: 'Sept' },
-    { num: 10, short: 'Oct' },
-    { num: 11, short: 'Nov' },
-    { num: 12, short: 'Dec' },
+    { num: 1, short: 'Jan', full: 'January' },
+    { num: 2, short: 'Feb', full: 'February' },
+    { num: 3, short: 'Mar', full: 'March' },
+    { num: 4, short: 'Apr', full: 'April' },
+    { num: 5, short: 'May', full: 'May' },
+    { num: 6, short: 'Jun', full: 'June' },
+    { num: 7, short: 'Jul', full: 'July' },
+    { num: 8, short: 'Aug', full: 'August' },
+    { num: 9, short: 'Sep', full: 'September' },
+    { num: 10, short: 'Oct', full: 'October' },
+    { num: 11, short: 'Nov', full: 'November' },
+    { num: 12, short: 'Dec', full: 'December' },
   ];
 
   // Group values by year
@@ -78,13 +78,18 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
     return grouped;
   }, [values]);
 
-  // Get all years from data, sorted descending, filtered by selected years
+  // Get all years from data, sorted ascending, filtered by selected years
   const years = useMemo(() => {
     return Object.keys(valuesByYear)
       .map(Number)
       .filter(year => selectedYears.includes(year))
-      .sort((a, b) => b - a);
+      .sort((a, b) => a - b); // Sort ascending for table display
   }, [valuesByYear, selectedYears]);
+  
+  // Format number with space separator
+  const formatNumber = (value: number): string => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
 
   // Calculate YTD for each year
   const calculateYTD = (year: number): number => {
@@ -116,84 +121,75 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
   const valueRange = maxValue - minValue || 1;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container-custom section">
-        {/* Header */}
-        <div className="mb-8">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Scoreboards
-          </Link>
-          
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">{metric.name}</h1>
+    <div className="min-h-screen bg-bg-base">
+      {/* Top Header Bar */}
+      <div className="border-b border-border-default bg-white">
+        <div className="container-custom">
+          <div className="flex items-center justify-between h-16">
+            {/* Brand Selector */}
+            <button className="flex items-center gap-2 px-4 py-2 text-body font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
+              <span>Acme Corp</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
             
-            {/* Year Multi-Select Dropdown */}
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500 font-medium">Years</label>
-                <div className="relative">
-                  <select
-                    multiple
-                    value={selectedYears.map(String)}
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions, option => Number(option.value));
-                      setSelectedYears(selected);
-                    }}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-w-[120px]"
-                    size={Math.min(availableYears.length, 4)}
-                  >
-                    {availableYears.map(year => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <span className="text-xs text-gray-400">Hold Ctrl/Cmd to multi-select</span>
-              </div>
-              
-              {/* YTD Toggle - Always visible */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 font-medium">YTD</span>
-                <button
-                  onClick={() => setShowYTD(!showYTD)}
-                  className={`w-10 h-6 rounded-full transition-colors ${
-                    showYTD ? 'bg-primary-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`block w-4 h-4 rounded-full bg-white transition-transform ${
-                      showYTD ? 'translate-x-5' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
+            {/* Avatar */}
+            <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center text-body-sm font-medium text-neutral-700">
+              JD
             </div>
           </div>
         </div>
+      </div>
+      
+      <div className="container-custom section">
+        {/* Breadcrumb */}
+        <div className="mb-2">
+          <nav className="text-body-sm text-neutral-500">
+            <Link href="/" className="hover:text-neutral-700 transition-colors">Home</Link>
+            <span className="mx-2">/</span>
+            <Link href="/" className="hover:text-neutral-700 transition-colors">Scoreboard</Link>
+            <span className="mx-2">/</span>
+            <span className="text-neutral-700">{metric.name}</span>
+          </nav>
+        </div>
+        
+        {/* Page Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-h1 font-bold text-neutral-900">{metric.name}</h1>
+          
+          {/* YTD Toggle - Always visible */}
+          <div className="flex items-center gap-2">
+            <span className="text-body-sm text-neutral-700 font-medium">Year to date</span>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                className="toggle-input"
+                checked={showYTD}
+                onChange={(e) => setShowYTD(e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+        </div>
 
-        {/* Table */}
-        <div className="card overflow-x-auto mb-8">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left p-4 font-semibold text-gray-700"></th>
+        {/* Table - Years as rows, months as columns */}
+        <div className="card overflow-x-auto mb-8 p-0">
+          <table className="table">
+            <thead className="table-header">
+              <tr>
+                <th className="table-cell table-cell-header text-left" style={{ minWidth: '120px' }}></th>
                 {months.map((month) => (
                   <th
                     key={month.num}
-                    className="text-center p-4 font-semibold text-gray-700 min-w-[80px]"
+                    className="table-cell table-cell-header text-center"
+                    style={{ minWidth: '100px' }}
                   >
                     {month.short}
                   </th>
                 ))}
                 {showYTD && (
-                  <th className="text-center p-4 font-semibold text-gray-700 min-w-[80px]">
+                  <th className="table-cell table-cell-header text-center" style={{ minWidth: '100px' }}>
                     YTD
                   </th>
                 )}
@@ -202,44 +198,45 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
             <tbody>
               {years.length === 0 ? (
                 <tr>
-                  <td colSpan={showYTD ? 14 : 13} className="p-12 text-center text-gray-400">
+                  <td colSpan={months.length + (showYTD ? 2 : 1)} className="table-cell text-center text-neutral-400 p-12">
                     No data yet. Click on a cell to add a value.
                   </td>
                 </tr>
               ) : (
-                years.map((year, yearIndex) => {
-                  const ytdValue = calculateYTD(year);
-                  return (
-                    <tr
-                      key={year}
-                      className={`border-b border-gray-200 ${yearIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
-                    >
-                      <td className="p-4 text-gray-900 font-semibold">{year}</td>
-                      {months.map((month) => {
-                        const value = valuesByYear[year]?.[month.num] || null;
-                        return (
-                          <td
-                            key={month.num}
-                            className="border-b border-gray-200"
-                          >
-                            <EditableCell
-                              metricId={metric.id}
-                              year={year}
-                              month={month.num}
-                              value={value}
-                              onSave={handleValueSaved}
-                            />
-                          </td>
-                        );
-                      })}
-                      {showYTD && (
-                        <td className="p-4 text-center text-gray-900 font-semibold border-l-2 border-gray-300">
-                          {ytdValue > 0 ? ytdValue.toLocaleString() : '-'}
+                <>
+                  {years.map((year, yearIndex) => {
+                    const ytdValue = calculateYTD(year);
+                    return (
+                      <tr key={year} className="border-b border-border-grid">
+                        <td className="table-cell text-left font-semibold text-neutral-700">
+                          {year}
                         </td>
-                      )}
-                    </tr>
-                  );
-                })
+                        {months.map((month) => {
+                          const value = valuesByYear[year]?.[month.num] || null;
+                          return (
+                            <td
+                              key={`${year}-${month.num}`}
+                              className="table-cell table-cell-numeric"
+                            >
+                              <EditableCell
+                                metricId={metric.id}
+                                year={year}
+                                month={month.num}
+                                value={value}
+                                onSave={handleValueSaved}
+                              />
+                            </td>
+                          );
+                        })}
+                        {showYTD && (
+                          <td className="table-cell table-cell-numeric font-semibold text-neutral-700 border-l-2 border-border-strong">
+                            {ytdValue > 0 ? formatNumber(ytdValue) : '—'}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </>
               )}
             </tbody>
           </table>
@@ -247,74 +244,140 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
 
         {/* Bottom Section: Graph and AI Insight */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Graph */}
-          <div className="lg:col-span-2 card p-6">
-            <h2 className="text-lg font-semibold mb-4">Trend</h2>
+          {/* Graph Container */}
+          <div className="lg:col-span-2 chart-container">
+            <h2 className="chart-title">Trend</h2>
             {graphData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center text-gray-400">
+              <div className="h-64 flex items-center justify-center text-neutral-400 text-body">
                 No data to display
               </div>
             ) : (
               <div className="h-64 relative">
                 <svg className="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
-                  {/* Axes */}
+                  {/* Grid lines */}
+                  {[0, 1, 2, 3, 4].map((i) => {
+                    const y = 20 + (i * 40);
+                    return (
+                      <line
+                        key={i}
+                        x1="40"
+                        y1={y}
+                        x2="760"
+                        y2={y}
+                        stroke="var(--color-border-grid)"
+                        strokeWidth="1"
+                      />
+                    );
+                  })}
+                  
+                  {/* X-axis */}
                   <line
                     x1="40"
                     y1="180"
                     x2="760"
                     y2="180"
-                    stroke="#e5e7eb"
+                    stroke="var(--color-border-default)"
                     strokeWidth="2"
                   />
+                  
+                  {/* Y-axis */}
                   <line
                     x1="40"
                     y1="180"
                     x2="40"
                     y2="20"
-                    stroke="#e5e7eb"
+                    stroke="var(--color-border-default)"
                     strokeWidth="2"
                   />
                   
-                  {/* Graph line */}
-                  {graphData.length > 1 && (
-                    <polyline
-                      points={graphData
-                        .map((d, i) => {
-                          const x = 40 + (i / (graphData.length - 1)) * 720;
-                          const y = 180 - ((d.value - minValue) / valueRange) * 160;
-                          return `${x},${y}`;
-                        })
-                        .join(' ')}
-                      fill="none"
-                      stroke="#0284c7"
-                      strokeWidth="3"
-                    />
-                  )}
-                  
-                  {/* Data points */}
-                  {graphData.map((d, i) => {
-                    const x = 40 + (i / Math.max(graphData.length - 1, 1)) * 720;
-                    const y = 180 - ((d.value - minValue) / valueRange) * 160;
+                  {/* Year lines */}
+                  {years.map((year, yearIdx) => {
+                    const yearData = months.map(month => {
+                      const value = valuesByYear[year]?.[month.num];
+                      return value ? { month: month.num, value } : null;
+                    }).filter(Boolean) as Array<{ month: number; value: number }>;
+                    
+                    if (yearData.length === 0) return null;
+                    
+                    const yearColor = year === 2023 ? 'var(--color-neutral-400)' :
+                                     year === 2024 ? 'var(--color-primary-600)' :
+                                     'var(--color-info-500)';
+                    
                     return (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={y}
-                        r="4"
-                        fill="#0284c7"
-                      />
+                      <g key={year}>
+                        <polyline
+                          points={yearData
+                            .map((d, i) => {
+                              const x = 40 + (i / 11) * 720;
+                              const y = 180 - ((d.value - minValue) / valueRange) * 160;
+                              return `${x},${y}`;
+                            })
+                            .join(' ')}
+                          fill="none"
+                          stroke={yearColor}
+                          strokeWidth="2"
+                        />
+                        {yearData.map((d, i) => {
+                          const x = 40 + (i / 11) * 720;
+                          const y = 180 - ((d.value - minValue) / valueRange) * 160;
+                          return (
+                            <circle
+                              key={`${year}-${d.month}`}
+                              cx={x}
+                              cy={y}
+                              r="4"
+                              fill={yearColor}
+                            />
+                          );
+                        })}
+                      </g>
+                    );
+                  })}
+                  
+                  {/* Month labels */}
+                  {months.map((month, i) => {
+                    const x = 40 + (i / 11) * 720;
+                    return (
+                      <text
+                        key={month.num}
+                        x={x}
+                        y="195"
+                        textAnchor="middle"
+                        fontSize="12"
+                        fill="var(--color-neutral-500)"
+                      >
+                        {month.short}
+                      </text>
                     );
                   })}
                 </svg>
+                
+                {/* Legend */}
+                <div className="chart-legend">
+                  {years.map((year) => {
+                    const yearColor = year === 2023 ? 'var(--color-neutral-400)' :
+                                     year === 2024 ? 'var(--color-primary-600)' :
+                                     'var(--color-info-500)';
+                    return (
+                      <div key={year} className="chart-legend-item">
+                        <div
+                          className="chart-legend-color"
+                          style={{ backgroundColor: yearColor }}
+                        />
+                        <span>{year}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
 
-          {/* AI Insight */}
+          {/* AI Insight Panel */}
           <div className="card p-6">
-            <h2 className="text-lg font-semibold mb-4">AI Insight</h2>
-            <div className="min-h-[200px] text-gray-400 text-sm">
-              <p>AI insights will appear here based on your metric data.</p>
+            <h2 className="text-h4 font-semibold text-neutral-900 mb-4">AI Insight</h2>
+            <div className="text-body text-neutral-700 leading-relaxed">
+              <p>Traffic has increased significantly this year compared to previous years, with a consistent upward trend in recent months.</p>
             </div>
           </div>
         </div>
