@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
+import { UserMenu } from './UserMenu';
 import type { Brand, Metric } from '@/types/database';
 
 interface MetricWithValues extends Metric {
@@ -138,10 +139,8 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                 </svg>
               </button>
               
-              {/* Avatar */}
-              <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center text-body-sm font-medium text-neutral-700">
-                JD
-              </div>
+              {/* User Menu */}
+              <UserMenu />
             </div>
           </div>
         </div>

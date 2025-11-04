@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { EditableCell } from './EditableCell';
+import { UserMenu } from './UserMenu';
 import { Metric, MetricValue } from '@/types/database';
 
 interface MetricDetailContentProps {
@@ -134,10 +135,8 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
               </svg>
             </button>
             
-            {/* Avatar */}
-            <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center text-body-sm font-medium text-neutral-700">
-              JD
-            </div>
+            {/* User Menu */}
+            <UserMenu />
           </div>
         </div>
       </div>
