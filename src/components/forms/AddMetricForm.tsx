@@ -71,8 +71,12 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
         throw new Error(errorData.error || 'Failed to create metric');
       }
 
-      onSuccess();
+      // Close the form first
       onClose();
+      // Wait a bit longer to ensure database write completes, then reload
+      setTimeout(() => {
+        onSuccess();
+      }, 500);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create metric';
       setError(errorMessage);
