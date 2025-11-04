@@ -21,7 +21,8 @@ export async function getUserBrands() {
 
 // Get all metrics for a brand
 export async function getBrandMetrics(brandId: string) {
-  const { data, error } = await supabase
+  // Using admin client to bypass RLS until auth is set up
+  const { data, error } = await supabaseAdmin
     .from('metrics')
     .select('*')
     .eq('brand_id', brandId)
@@ -37,7 +38,8 @@ export async function getBrandMetrics(brandId: string) {
 
 // Get a single metric with its values
 export async function getMetric(metricId: string) {
-  const { data: metric, error: metricError } = await supabase
+  // Using admin client to bypass RLS until auth is set up
+  const { data: metric, error: metricError } = await supabaseAdmin
     .from('metrics')
     .select('*')
     .eq('id', metricId)
@@ -48,7 +50,8 @@ export async function getMetric(metricId: string) {
     return null;
   }
 
-  const { data: values, error: valuesError } = await supabase
+  // Using admin client to bypass RLS until auth is set up
+  const { data: values, error: valuesError } = await supabaseAdmin
     .from('metric_values')
     .select('*')
     .eq('metric_id', metricId)
@@ -71,7 +74,8 @@ export async function getBrandMetricsWithLatestValues(brandId: string) {
   
   const metricsWithValues = await Promise.all(
     metrics.map(async (metric) => {
-      const { data: latestValue } = await supabase
+      // Using admin client to bypass RLS until auth is set up
+      const { data: latestValue } = await supabaseAdmin
         .from('metric_values')
         .select('value, year, month')
         .eq('metric_id', metric.id)
@@ -94,7 +98,8 @@ export async function getBrandMetricsWithLatestValues(brandId: string) {
 
 // Get all metric values for a specific year, organized by metric_id -> year -> month
 export async function getAllMetricValuesForYear(year: number) {
-  const { data, error } = await supabase
+  // Using admin client to bypass RLS until auth is set up
+  const { data, error } = await supabaseAdmin
     .from('metric_values')
     .select('metric_id, year, month, value')
     .eq('year', year)
