@@ -38,7 +38,6 @@ export default async function MetricPage({ params }: MetricPageProps) {
   // Calculate stats
   const allValues = values.map(v => Number(v.value));
   const maxValue = allValues.length > 0 ? Math.max(...allValues) : null;
-  const minValue = allValues.length > 0 ? Math.min(...allValues) : null;
   const avgValue = allValues.length > 0 
     ? allValues.reduce((a, b) => a + b, 0) / allValues.length 
     : null;

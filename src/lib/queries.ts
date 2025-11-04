@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Brand, Metric, MetricValue, BrandMembership } from '../types/database';
+import type { Brand, Metric, MetricValue } from '../types/database';
 
 // Get all brands for the current user
 export async function getUserBrands() {
