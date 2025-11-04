@@ -204,7 +204,7 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
                 </tr>
               ) : (
                 <>
-                  {years.map((year, yearIndex) => {
+                  {years.map((year) => {
                     const ytdValue = calculateYTD(year);
                     return (
                       <tr key={year} className="border-b border-border-grid">
@@ -291,7 +291,7 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
                   />
                   
                   {/* Year lines */}
-                  {years.map((year, yearIdx) => {
+                  {years.map((year) => {
                     const yearData = months.map(month => {
                       const value = valuesByYear[year]?.[month.num];
                       return value ? { month: month.num, value } : null;

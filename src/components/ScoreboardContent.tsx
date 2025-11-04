@@ -23,7 +23,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
   const [metricValues, setMetricValues] = useState(initialMetricValues);
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedYear, _setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
   
   // Available years for selection (2023 to current year, at least up to 2025)
