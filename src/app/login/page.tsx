@@ -18,28 +18,44 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      console.log('Attempting to sign in...');
+      console.log('Attempting to sign in with email:', email);
+      
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log('Sign in response:', { data, error: signInError });
-
       if (signInError) {
         console.error('Sign in error:', signInError);
-        throw signInError;
+        setError(signInError.message || 'Invalid email or password');
+        setIsLoading(false);
+        return;
       }
 
-      if (data.user) {
-        console.log('Sign in successful, redirecting...');
-        // Redirect to home page
+      if (!data.user) {
+        console.error('No user data returned');
+        setError('Sign in failed - no user data');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Sign in successful, user:', data.user.email);
+      
+      // Wait a moment for session to be persisted
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify session is set
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        console.log('Session confirmed, redirecting...');
         window.location.href = '/';
       } else {
-        throw new Error('No user data returned');
+        console.error('Session not found after sign in');
+        setError('Session not established. Please try again.');
+        setIsLoading(false);
       }
     } catch (err) {
-      console.error('Sign in failed:', err);
+      console.error('Sign in failed with exception:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign in';
       setError(errorMessage);
       setIsLoading(false);
