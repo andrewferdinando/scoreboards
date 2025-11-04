@@ -35,8 +35,9 @@ export function AddMetricForm({ brands, onSuccess, onClose }: AddMetricFormProps
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to create metric');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create metric';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

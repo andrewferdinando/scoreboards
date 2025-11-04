@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { EditableCell } from './EditableCell';
 import { Metric, MetricValue } from '@/types/database';
 

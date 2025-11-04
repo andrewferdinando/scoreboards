@@ -43,8 +43,9 @@ export function AddMetricValueForm({ metricId, initialYear, initialMonth, onSucc
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add metric value');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add metric value';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

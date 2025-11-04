@@ -1,6 +1,4 @@
 import { getMetric } from '@/lib/queries';
-import { MetricValue } from '@/types/database';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MetricDetailContent } from '@/components/MetricDetailContent';
 
