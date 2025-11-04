@@ -9,6 +9,7 @@ export interface Brand {
 export interface Profile {
   id: string; // matches auth.users.id
   email: string;
+  name?: string;
   created_at: string;
 }
 
