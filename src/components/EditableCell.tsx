@@ -7,7 +7,7 @@ interface EditableCellProps {
   year: number;
   month: number;
   value: number | null;
-  onSave: () => void;
+  onSave: (metricId: string, year: number, month: number, value: number | null) => void;
 }
 
 export function EditableCell({ metricId, year, month, value, onSave }: EditableCellProps) {
@@ -63,8 +63,11 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
 
     // Update the displayed value instantly (optimistic update)
     setDisplayValue(numericValue);
+    
+    // Update parent state immediately (spreadsheet-like experience)
+    onSave(metricId, year, month, numericValue);
 
-    // Save in the background
+    // Save in the background (fire and forget)
     (async () => {
       try {
         if (numericValue === null || isNaN(numericValue)) {
@@ -100,15 +103,14 @@ export function EditableCell({ metricId, year, month, value, onSave }: EditableC
             throw new Error(errorData.error || 'Failed to save value');
           }
         }
-
-        // Reload after save completes
-        onSave();
       } catch (error) {
         console.error('Error saving value:', error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to save value';
         // Revert to original value on error
         setDisplayValue(value);
         setEditValue(value?.toString() || '');
+        // Revert parent state on error
+        onSave(metricId, year, month, value);
         alert(errorMessage); // Show error to user
       }
     })();

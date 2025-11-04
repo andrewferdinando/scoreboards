@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import type { Brand, Metric } from '@/types/database';
@@ -18,8 +18,10 @@ interface ScoreboardContentProps {
   allMetricValues: Record<string, Record<number, Record<number, number>>>;
 }
 
-export function ScoreboardContent({ brands, allMetricValues }: ScoreboardContentProps) {
+export function ScoreboardContent({ brands: initialBrands, allMetricValues: initialMetricValues }: ScoreboardContentProps) {
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
+  const [metricValues, setMetricValues] = useState(initialMetricValues);
+  const [brands, setBrands] = useState(initialBrands);
 
   const handleMetricAdded = () => {
     // Force a full page reload to ensure fresh data is fetched
@@ -27,10 +29,36 @@ export function ScoreboardContent({ brands, allMetricValues }: ScoreboardContent
     window.location.reload();
   };
 
-  const handleValueSaved = () => {
-    // Force a full page reload to ensure fresh data is fetched
-    window.location.reload();
-  };
+  const handleValueSaved = useCallback((metricId: string, year: number, month: number, value: number | null) => {
+    // Update local state immediately (spreadsheet-like experience)
+    setMetricValues(prev => {
+      const newValues = { ...prev };
+      if (!newValues[metricId]) {
+        newValues[metricId] = {};
+      }
+      if (!newValues[metricId][year]) {
+        newValues[metricId][year] = {};
+      }
+      if (value === null) {
+        // Remove the value if it's null
+        const { [month]: _, ...rest } = newValues[metricId][year];
+        newValues[metricId][year] = rest;
+        // Clean up empty year object
+        if (Object.keys(newValues[metricId][year]).length === 0) {
+          const { [year]: __, ...restYear } = newValues[metricId];
+          newValues[metricId] = restYear;
+        }
+        // Clean up empty metric object
+        if (Object.keys(newValues[metricId]).length === 0) {
+          const { [metricId]: ___, ...restMetric } = newValues;
+          return restMetric;
+        }
+      } else {
+        newValues[metricId][year][month] = value;
+      }
+      return newValues;
+    });
+  }, []);
 
   const months = [
     { num: 1, short: 'Jan' },
@@ -106,7 +134,7 @@ export function ScoreboardContent({ brands, allMetricValues }: ScoreboardContent
                       <td className="p-4 text-gray-900 font-medium">{metric.name}</td>
                       <td className="p-4 text-gray-600 text-sm">{metric.data_source || '-'}</td>
                       {months.map((month) => {
-                        const value = allMetricValues[metric.id]?.[currentYear]?.[month.num] || null;
+                        const value = metricValues[metric.id]?.[currentYear]?.[month.num] || null;
                         return (
                           <td
                             key={month.num}
