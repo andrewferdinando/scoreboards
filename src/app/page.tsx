@@ -1,11 +1,19 @@
 import { getUserBrands, getBrandMetricsWithLatestValues, getAllMetricValuesForYears } from '@/lib/queries';
 import { ScoreboardContent } from '@/components/ScoreboardContent';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 // Force dynamic rendering to prevent caching
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ScoreboardPage() {
+  // Check authentication
+  const session = await getSession();
+  if (!session) {
+    redirect('/login');
+  }
+
   const brands = await getUserBrands();
 
   // Get metrics for each brand

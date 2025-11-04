@@ -1,12 +1,11 @@
-import { supabaseAdmin } from './supabase';
+import { createClient } from './auth';
 import type { Brand, Metric, MetricValue } from '../types/database';
 
 // Get all brands for the current user
-// Using admin client for now since we don't have auth set up yet
+// RLS will automatically filter brands based on membership
 export async function getUserBrands() {
-  // RLS will automatically filter brands based on membership
-  // For now, using admin client to bypass RLS until auth is set up
-  const { data, error } = await supabaseAdmin
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from('brands')
     .select('*')
     .order('created_at', { ascending: false });
@@ -21,8 +20,8 @@ export async function getUserBrands() {
 
 // Get all metrics for a brand
 export async function getBrandMetrics(brandId: string) {
-  // Using admin client to bypass RLS until auth is set up
-  const { data, error } = await supabaseAdmin
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from('metrics')
     .select('*')
     .eq('brand_id', brandId)
@@ -38,8 +37,8 @@ export async function getBrandMetrics(brandId: string) {
 
 // Get a single metric with its values
 export async function getMetric(metricId: string) {
-  // Using admin client to bypass RLS until auth is set up
-  const { data: metric, error: metricError } = await supabaseAdmin
+  const supabase = await createClient();
+  const { data: metric, error: metricError } = await supabase
     .from('metrics')
     .select('*')
     .eq('id', metricId)
@@ -50,8 +49,7 @@ export async function getMetric(metricId: string) {
     return null;
   }
 
-  // Using admin client to bypass RLS until auth is set up
-  const { data: values, error: valuesError } = await supabaseAdmin
+  const { data: values, error: valuesError } = await supabase
     .from('metric_values')
     .select('*')
     .eq('metric_id', metricId)
@@ -71,11 +69,11 @@ export async function getMetric(metricId: string) {
 // Get latest value for each metric in a brand
 export async function getBrandMetricsWithLatestValues(brandId: string) {
   const metrics = await getBrandMetrics(brandId);
+  const supabase = await createClient();
   
   const metricsWithValues = await Promise.all(
     metrics.map(async (metric) => {
-      // Using admin client to bypass RLS until auth is set up
-      const { data: latestValue } = await supabaseAdmin
+      const { data: latestValue } = await supabase
         .from('metric_values')
         .select('value, year, month')
         .eq('metric_id', metric.id)
@@ -98,8 +96,8 @@ export async function getBrandMetricsWithLatestValues(brandId: string) {
 
 // Get all metric values for a specific year, organized by metric_id -> year -> month
 export async function getAllMetricValuesForYear(year: number) {
-  // Using admin client to bypass RLS until auth is set up
-  const { data, error } = await supabaseAdmin
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from('metric_values')
     .select('metric_id, year, month, value')
     .eq('year', year)
@@ -134,8 +132,8 @@ export async function getAllMetricValuesForYears() {
   const startYear = 2023;
   const endYear = Math.max(currentYear, 2025); // At least up to 2025
   
-  // Using admin client to bypass RLS until auth is set up
-  const { data, error } = await supabaseAdmin
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from('metric_values')
     .select('metric_id, year, month, value')
     .gte('year', startYear)
