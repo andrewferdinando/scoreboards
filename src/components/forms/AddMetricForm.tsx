@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Brand } from '@/types/database';
 
@@ -10,17 +10,47 @@ interface AddMetricFormProps {
   onClose: () => void;
 }
 
-export function AddMetricForm({ brands, onSuccess, onClose }: AddMetricFormProps) {
+export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: AddMetricFormProps) {
   const [name, setName] = useState('');
-  const [brandId, setBrandId] = useState(brands[0]?.id || '');
+  const [brandId, setBrandId] = useState('');
   const [dataSource, setDataSource] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [brands, setBrands] = useState<Brand[]>(initialBrands);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+
+  // Fetch brands client-side as fallback
+  useEffect(() => {
+    if (brands.length === 0) {
+      setLoadingBrands(true);
+      supabase
+        .from('brands')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Error fetching brands:', error);
+          } else if (data && data.length > 0) {
+            setBrands(data as Brand[]);
+            setBrandId(data[0].id);
+          }
+          setLoadingBrands(false);
+        });
+    } else {
+      setBrandId(brands[0]?.id || '');
+    }
+  }, [brands.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    if (!brandId) {
+      setError('Please select a brand');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { error: insertError } = await supabase
@@ -71,19 +101,27 @@ export function AddMetricForm({ brands, onSuccess, onClose }: AddMetricFormProps
               <label htmlFor="brand" className="label label-required">
                 Brand
               </label>
-              <select
-                id="brand"
-                value={brandId}
-                onChange={(e) => setBrandId(e.target.value)}
-                className="input"
-                required
-              >
-                {brands.map((brand) => (
-                  <option key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </option>
-                ))}
-              </select>
+              {loadingBrands ? (
+                <div className="input">Loading brands...</div>
+              ) : brands.length === 0 ? (
+                <div className="input text-error-600">
+                  No brands found. Please create a brand in Supabase first.
+                </div>
+              ) : (
+                <select
+                  id="brand"
+                  value={brandId}
+                  onChange={(e) => setBrandId(e.target.value)}
+                  className="input"
+                  required
+                >
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
@@ -127,7 +165,7 @@ export function AddMetricForm({ brands, onSuccess, onClose }: AddMetricFormProps
               <button
                 type="submit"
                 className="btn-primary flex-1"
-                disabled={isLoading}
+                disabled={isLoading || brands.length === 0}
               >
                 {isLoading ? 'Creating...' : 'Create Metric'}
               </button>
@@ -138,4 +176,3 @@ export function AddMetricForm({ brands, onSuccess, onClose }: AddMetricFormProps
     </div>
   );
 }
-

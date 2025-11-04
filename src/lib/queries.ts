@@ -1,10 +1,12 @@
-import { supabase } from './supabase';
+import { supabase, supabaseAdmin } from './supabase';
 import type { Brand, Metric, MetricValue } from '../types/database';
 
 // Get all brands for the current user
+// Using admin client for now since we don't have auth set up yet
 export async function getUserBrands() {
   // RLS will automatically filter brands based on membership
-  const { data, error } = await supabase
+  // For now, using admin client to bypass RLS until auth is set up
+  const { data, error } = await supabaseAdmin
     .from('brands')
     .select('*')
     .order('created_at', { ascending: false });
