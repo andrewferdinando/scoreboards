@@ -22,7 +22,7 @@ export default async function MetricPage({ params }: MetricPageProps) {
   const { values, ...metric } = metricData;
 
   // Group values by year for better organization
-  const valuesByYear = values.reduce((acc: Record<number, MetricValue[]>, value) => {
+  const valuesByYear = values.reduce((acc: Record<number, MetricValue[]>, value: MetricValue) => {
     if (!acc[value.year]) {
       acc[value.year] = [];
     }
