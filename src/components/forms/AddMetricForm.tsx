@@ -16,6 +16,7 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
   const [dataSource, setDataSource] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [brands, setBrands] = useState<Brand[]>(initialBrands);
   const [loadingBrands, setLoadingBrands] = useState(false);
 
@@ -71,12 +72,18 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
         throw new Error(errorData.error || 'Failed to create metric');
       }
 
-      // Close the form first
-      onClose();
-      // Wait a bit longer to ensure database write completes, then reload
+      // Show success state
+      setSuccess(true);
+      setIsLoading(false);
+      
+      // Wait a moment to show success, then close and reload
       setTimeout(() => {
-        onSuccess();
-      }, 500);
+        onClose();
+        // Small delay to ensure form closes smoothly before reload
+        setTimeout(() => {
+          onSuccess();
+        }, 100);
+      }, 800);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create metric';
       setError(errorMessage);
@@ -105,6 +112,15 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-error-50 border border-error-200 text-error-700 text-sm">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Metric created successfully! Refreshing...</span>
             </div>
           )}
 
@@ -177,9 +193,9 @@ export function AddMetricForm({ brands: initialBrands, onSuccess, onClose }: Add
               <button
                 type="submit"
                 className="btn-primary flex-1"
-                disabled={isLoading || brands.length === 0}
+                disabled={isLoading || success || brands.length === 0}
               >
-                {isLoading ? 'Creating...' : 'Create Metric'}
+                {isLoading ? 'Creating...' : success ? 'Created!' : 'Create Metric'}
               </button>
             </div>
           </form>

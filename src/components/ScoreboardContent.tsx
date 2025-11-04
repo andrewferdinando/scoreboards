@@ -22,12 +22,13 @@ export function ScoreboardContent({ brands, allMetricValues }: ScoreboardContent
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
 
   const handleMetricAdded = () => {
-    // Force a full page reload to ensure data is fetched
+    // Force a full page reload to ensure fresh data is fetched
+    // The form shows a success message before this is called
     window.location.reload();
   };
 
   const handleValueSaved = () => {
-    // Force a full page reload to ensure data is fetched
+    // Force a full page reload to ensure fresh data is fetched
     window.location.reload();
   };
 
