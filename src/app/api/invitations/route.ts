@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if user exists in auth.users
-    const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (usersError) {
       console.error('Error fetching users:', usersError);
@@ -77,7 +77,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const existingUser = users.users.find(u => u.email === email.toLowerCase());
+    const users = usersData?.users || [];
+    const existingUser = users.find(u => u.email === email.toLowerCase());
     
     if (!existingUser) {
       return NextResponse.json(
