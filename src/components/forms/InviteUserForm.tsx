@@ -95,9 +95,8 @@ export function InviteUserForm({ isOpen, onClose, onSuccess, brands }: InviteUse
             variant="primary"
             onClick={handleSubmit}
             disabled={isLoading || !email.trim() || !brandId}
-            loading={isLoading}
           >
-            Send Invitation
+            {isLoading ? 'Sending...' : 'Send Invitation'}
           </Button>
         </div>
       }

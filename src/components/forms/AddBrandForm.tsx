@@ -69,9 +69,8 @@ export function AddBrandForm({ isOpen, onClose, onSuccess }: AddBrandFormProps) 
             variant="primary"
             onClick={handleSubmit}
             disabled={isLoading || !name.trim()}
-            loading={isLoading}
           >
-            Add Brand
+            {isLoading ? 'Adding...' : 'Add Brand'}
           </Button>
         </div>
       }
