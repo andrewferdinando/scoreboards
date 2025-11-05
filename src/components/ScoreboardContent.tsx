@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import { UserMenu } from './UserMenu';
 import { Dropdown } from './ui/Dropdown';
+import { getSelectedBrandId, setSelectedBrandId } from '@/lib/brandSelection';
 import type { Brand, Metric } from '@/types/database';
 
 interface MetricWithValues extends Metric {
@@ -28,10 +29,34 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
   
-  // Brand selection state
-  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(
-    brands && brands.length > 0 ? brands[0].id : null
-  );
+  // Brand selection state - initialize from localStorage or default to first brand
+  const [selectedBrandId, setSelectedBrandIdState] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = getSelectedBrandId();
+      if (saved && brands.some(b => b.id === saved)) {
+        return saved;
+      }
+    }
+    return brands && brands.length > 0 ? brands[0].id : null;
+  });
+
+  // Update localStorage when brand selection changes
+  const setSelectedBrandId = useCallback((brandId: string | null) => {
+    setSelectedBrandIdState(brandId);
+    setSelectedBrandId(brandId);
+  }, []);
+
+  // Sync with localStorage on mount
+  useEffect(() => {
+    const saved = getSelectedBrandId();
+    if (saved && brands.some(b => b.id === saved)) {
+      setSelectedBrandIdState(saved);
+    } else if (brands.length > 0 && !selectedBrandId) {
+      const firstBrandId = brands[0].id;
+      setSelectedBrandIdState(firstBrandId);
+      setSelectedBrandId(firstBrandId);
+    }
+  }, [brands]);
   
   const brandOptions = brands.map(brand => ({
     value: brand.id,

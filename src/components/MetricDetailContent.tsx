@@ -7,6 +7,7 @@ import { EditableCell } from './EditableCell';
 import { UserMenu } from './UserMenu';
 import { MultiSelect } from './ui/MultiSelect';
 import { Dropdown } from './ui/Dropdown';
+import { getSelectedBrandId, setSelectedBrandId } from '@/lib/brandSelection';
 import { Metric, MetricValue } from '@/types/database';
 
 interface MetricDetailContentProps {
@@ -19,19 +20,37 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
   const router = useRouter();
   const [showYTD, setShowYTD] = useState(false);
   
-  // Brand selection state - initialize with the metric's brand_id
-  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(
-    metric.brand_id || (brands.length > 0 ? brands[0].id : null)
-  );
-  
-  // Update selectedBrandId if metric.brand_id changes
+  // Brand selection state - initialize from localStorage, metric's brand_id, or first brand
+  const [selectedBrandId, setSelectedBrandIdState] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = getSelectedBrandId();
+      if (saved && brands.some(b => b.id === saved)) {
+        return saved;
+      }
+    }
+    return metric.brand_id || (brands.length > 0 ? brands[0].id : null);
+  });
+
+  // Update localStorage when brand selection changes
+  const setSelectedBrandId = useCallback((brandId: string | null) => {
+    setSelectedBrandIdState(brandId);
+    setSelectedBrandId(brandId);
+  }, []);
+
+  // Sync with localStorage and metric's brand_id on mount
   useEffect(() => {
-    if (metric.brand_id) {
+    const saved = getSelectedBrandId();
+    if (saved && brands.some(b => b.id === saved)) {
+      setSelectedBrandIdState(saved);
+    } else if (metric.brand_id) {
+      setSelectedBrandIdState(metric.brand_id);
       setSelectedBrandId(metric.brand_id);
     } else if (brands.length > 0 && !selectedBrandId) {
-      setSelectedBrandId(brands[0].id);
+      const firstBrandId = brands[0].id;
+      setSelectedBrandIdState(firstBrandId);
+      setSelectedBrandId(firstBrandId);
     }
-  }, [metric.brand_id, brands]);
+  }, [metric.brand_id, brands, selectedBrandId]);
   
   const brandOptions = brands.map(brand => ({
     value: brand.id,
