@@ -30,3 +30,4 @@ JOIN public.profiles p ON bm.user_id = p.id
 WHERE p.email = 'your-email@example.com';
 
 
+

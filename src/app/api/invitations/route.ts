@@ -133,17 +133,16 @@ export async function POST(request: NextRequest) {
       
       userId = inviteData.user.id;
       
-      // Create profile for invited user
+      // Create profile for invited user (upsert to handle race conditions)
       await supabaseAdmin
         .from('profiles')
-        .insert([{
+        .upsert([{
           id: userId,
           email: email.toLowerCase(),
           name: email.split('@')[0],
-        }])
-        .on('conflict', 'id', { 
+        }], {
           onConflict: 'id',
-          ignoreDuplicates: true 
+          ignoreDuplicates: false
         });
     }
     

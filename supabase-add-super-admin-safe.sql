@@ -75,3 +75,4 @@ CREATE POLICY "super admins can insert brand memberships" ON brand_memberships
     )
   );
 
+

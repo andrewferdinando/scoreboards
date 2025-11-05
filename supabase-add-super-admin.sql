@@ -68,3 +68,4 @@ CREATE POLICY IF NOT EXISTS "super admins can insert brand memberships" ON brand
     )
   );
 
+
