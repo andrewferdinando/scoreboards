@@ -1,5 +1,6 @@
 import { createClient } from './auth';
-import type { Brand, Metric, MetricValue, Profile } from '../types/database';
+import type { Brand, Metric, MetricValue } from '../types/database';
+import type { Profile } from '../types/database';
 
 // Get all brands for the current user
 // RLS will automatically filter brands based on membership

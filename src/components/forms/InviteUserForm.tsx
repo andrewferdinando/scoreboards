@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Brand } from '@/types/database';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
