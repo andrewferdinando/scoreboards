@@ -164,3 +164,32 @@ export async function getAllMetricValuesForYears() {
   return organized;
 }
 
+// Get current user's profile
+export async function getCurrentUserProfile(): Promise<Profile | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return null;
+  }
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+  
+  if (error || !data) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+  
+  return data as Profile;
+}
+
+// Check if current user is a super admin
+export async function isSuperAdmin(): Promise<boolean> {
+  const profile = await getCurrentUserProfile();
+  return profile?.is_super_admin === true;
+}
+
