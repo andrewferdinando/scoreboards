@@ -16,20 +16,38 @@ export default async function ScoreboardPage() {
 
   try {
     const brands = await getUserBrands();
+    
+    if (!brands || brands.length === 0) {
+      // No brands found - return empty state (could be super admin with no brands or no access)
+      return <ScoreboardContent brands={[]} allMetricValues={{}} />;
+    }
 
     // Get metrics for each brand
     const brandsWithMetrics = await Promise.all(
       brands.map(async (brand) => {
-        const metrics = await getBrandMetricsWithLatestValues(brand.id);
-        return {
-          ...brand,
-          metrics,
-        };
+        try {
+          const metrics = await getBrandMetricsWithLatestValues(brand.id);
+          return {
+            ...brand,
+            metrics,
+          };
+        } catch (err) {
+          console.error(`Error fetching metrics for brand ${brand.id}:`, err);
+          return {
+            ...brand,
+            metrics: [],
+          };
+        }
       })
     );
 
     // Get all metric values for years 2023-2025 (or current year if > 2025)
-    const allMetricValues = await getAllMetricValuesForYears();
+    let allMetricValues = {};
+    try {
+      allMetricValues = await getAllMetricValuesForYears();
+    } catch (err) {
+      console.error('Error fetching metric values:', err);
+    }
 
     return <ScoreboardContent brands={brandsWithMetrics} allMetricValues={allMetricValues} />;
   } catch (error) {

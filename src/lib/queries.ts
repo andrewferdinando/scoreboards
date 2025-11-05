@@ -3,20 +3,26 @@ import type { Brand, Metric, MetricValue } from '../types/database';
 import type { Profile } from '../types/database';
 
 // Get all brands for the current user
-// RLS will automatically filter brands based on membership
+// RLS will automatically filter brands based on membership or super admin status
 export async function getUserBrands() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('brands')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('brands')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching brands:', error);
+    if (error) {
+      console.error('Error fetching brands:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      return [];
+    }
+
+    return (data || []) as Brand[];
+  } catch (err) {
+    console.error('Exception in getUserBrands:', err);
     return [];
   }
-
-  return data as Brand[];
 }
 
 // Get all metrics for a brand
