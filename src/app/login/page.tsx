@@ -18,23 +18,23 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
-    // Store debug info in sessionStorage so it persists
-    sessionStorage.setItem('login_debug', JSON.stringify({ step: 'starting', email }));
+    // Only store debug info if we're debugging (not in normal flow)
+    // sessionStorage.setItem('login_debug', JSON.stringify({ step: 'starting', email }));
 
     try {
-      sessionStorage.setItem('login_debug', JSON.stringify({ step: 'calling_signInWithPassword', email }));
+      // Debug: sessionStorage.setItem('login_debug', JSON.stringify({ step: 'calling_signInWithPassword', email }));
       
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      sessionStorage.setItem('login_debug', JSON.stringify({ 
-        step: 'signIn_response', 
-        hasError: !!signInError,
-        hasUser: !!data?.user,
-        error: signInError?.message 
-      }));
+      // Debug: sessionStorage.setItem('login_debug', JSON.stringify({ 
+      //   step: 'signIn_response', 
+      //   hasError: !!signInError,
+      //   hasUser: !!data?.user,
+      //   error: signInError?.message 
+      // }));
 
       if (signInError) {
         setError(signInError.message || 'Invalid email or password');
@@ -53,27 +53,32 @@ export default function LoginPage() {
       
       // Verify session is set
       const { data: { session } } = await supabase.auth.getSession();
-      sessionStorage.setItem('login_debug', JSON.stringify({ 
-        step: 'session_check', 
-        hasSession: !!session,
-        userId: session?.user?.id 
-      }));
+      // Debug: sessionStorage.setItem('login_debug', JSON.stringify({ 
+      //   step: 'session_check', 
+      //   hasSession: !!session,
+      //   userId: session?.user?.id 
+      // }));
 
       if (session) {
-        sessionStorage.setItem('login_debug', JSON.stringify({ step: 'redirecting' }));
+        // Clear debug info on successful login
+        sessionStorage.removeItem('login_debug');
         // Clear any error state before redirecting
         setError(null);
         // Use window.location for reliable redirect
         window.location.href = '/';
+        return; // Exit early to prevent any further execution
       } else {
         setError('Session not established. Please try again.');
         setIsLoading(false);
       }
     } catch (err) {
-      sessionStorage.setItem('login_debug', JSON.stringify({ 
-        step: 'exception', 
-        error: err instanceof Error ? err.message : String(err) 
-      }));
+      // Only store debug info on actual errors
+      if (err instanceof Error) {
+        sessionStorage.setItem('login_debug', JSON.stringify({ 
+          step: 'exception', 
+          error: err.message 
+        }));
+      }
       
       // Only show error if it's not a redirect-related issue
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign in';
@@ -108,8 +113,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Debug info - remove in production */}
-        {typeof window !== 'undefined' && sessionStorage.getItem('login_debug') && (
+        {/* Debug info - only show if there's an error or if explicitly enabled */}
+        {typeof window !== 'undefined' && error && sessionStorage.getItem('login_debug') && (
           <div className="mb-4 p-3 rounded-lg bg-neutral-50 border border-neutral-200 text-neutral-600 text-body-sm font-mono text-xs">
             <div className="font-semibold mb-1">Debug Info:</div>
             <pre>{sessionStorage.getItem('login_debug')}</pre>
