@@ -32,7 +32,7 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
   });
 
   // Update localStorage when brand selection changes
-  const setSelectedBrandId = useCallback((brandId: string | null) => {
+  const handleBrandChange = useCallback((brandId: string | null) => {
     setSelectedBrandIdState(brandId);
     setSelectedBrandId(brandId);
   }, []);
@@ -182,7 +182,7 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                   options={brandOptions}
                   onChange={(value) => {
                     const newBrandId = value as string;
-                    setSelectedBrandId(newBrandId);
+                    handleBrandChange(newBrandId);
                     // If changing brands, navigate back to scoreboard filtered by that brand
                     // The current metric belongs to metric.brand_id, so switching brands
                     // should take you back to the scoreboard for that brand

@@ -41,7 +41,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   });
 
   // Update localStorage when brand selection changes
-  const setSelectedBrandId = useCallback((brandId: string | null) => {
+  const handleBrandChange = useCallback((brandId: string | null) => {
     setSelectedBrandIdState(brandId);
     setSelectedBrandId(brandId);
   }, []);
@@ -56,7 +56,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
       setSelectedBrandIdState(firstBrandId);
       setSelectedBrandId(firstBrandId);
     }
-  }, [brands]);
+  }, [brands, selectedBrandId]);
   
   const brandOptions = brands.map(brand => ({
     value: brand.id,
@@ -203,7 +203,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                 <Dropdown
                   value={selectedBrandId || ''}
                   options={brandOptions}
-                  onChange={(value) => setSelectedBrandId(value as string)}
+                  onChange={(value) => handleBrandChange(value as string)}
                   placeholder="Select brand"
                 />
               ) : (
