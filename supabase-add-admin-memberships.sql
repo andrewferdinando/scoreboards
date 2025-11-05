@@ -29,3 +29,4 @@ JOIN public.brands b ON bm.brand_id = b.id
 JOIN public.profiles p ON bm.user_id = p.id
 WHERE p.email = 'your-email@example.com';
 
+

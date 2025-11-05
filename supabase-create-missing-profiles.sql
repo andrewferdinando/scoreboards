@@ -19,3 +19,4 @@ LEFT JOIN public.profiles p ON au.id = p.id
 WHERE p.id IS NULL
 ON CONFLICT (id) DO NOTHING;
 
+
