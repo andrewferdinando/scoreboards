@@ -75,19 +75,24 @@ export function Dropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50">
-          {options.map((option) => {
+        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50 overflow-hidden">
+          {options.map((option, index) => {
             const isSelected = option.value === value;
             return (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => handleSelect(option.value)}
-                className={`w-full text-left px-4 py-2 text-body transition-colors first:rounded-t-md last:rounded-b-md ${
+                className={`w-full text-left px-4 py-2 text-body transition-colors ${
+                  index === 0 ? 'rounded-t-md' : ''
+                } ${
+                  index === options.length - 1 ? 'rounded-b-md' : ''
+                } ${
                   isSelected
-                    ? 'bg-primary-gradient text-white'
+                    ? 'text-white'
                     : 'text-neutral-700 hover:bg-neutral-50'
                 }`}
+                style={isSelected ? { background: 'var(--color-primary-gradient)' } : undefined}
                 role="option"
                 aria-selected={isSelected}
               >

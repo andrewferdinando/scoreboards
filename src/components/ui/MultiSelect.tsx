@@ -81,15 +81,19 @@ export function MultiSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50 max-h-64 overflow-y-auto">
-          {options.map((option) => {
+        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50 max-h-64 overflow-y-auto overflow-x-hidden">
+          {options.map((option, index) => {
             const isSelected = value.includes(option.value);
             return (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => handleToggle(option.value)}
-                className={`w-full text-left px-4 py-2 text-body transition-colors flex items-center gap-2 first:rounded-t-md last:rounded-b-md ${
+                className={`w-full text-left px-4 py-2 text-body transition-colors flex items-center gap-2 ${
+                  index === 0 ? 'rounded-t-md' : ''
+                } ${
+                  index === options.length - 1 ? 'rounded-b-md' : ''
+                } ${
                   isSelected
                     ? 'bg-primary-50 text-primary-700'
                     : 'text-neutral-700 hover:bg-neutral-50'
@@ -97,13 +101,13 @@ export function MultiSelect({
                 role="option"
                 aria-selected={isSelected}
               >
-                <div className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center ${
+                <div className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${
                   isSelected ? 'border-primary-600 bg-primary-600' : 'border-neutral-300'
                 }`}>
                   {isSelected && (
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
                   )}
                 </div>
                 <span>{option.label}</span>
