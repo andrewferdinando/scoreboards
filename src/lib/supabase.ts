@@ -1,20 +1,14 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 // Client-side Supabase client (uses anon key, respects RLS)
+// Uses createBrowserClient from @supabase/ssr to ensure single instance
 // Returns a client even if env vars are missing (will fail gracefully at runtime)
-export const supabase = createClient(
+export const supabase = createBrowserClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
-  }
+  supabaseAnonKey || 'placeholder-key'
 )
 
 // Server-side Supabase client (uses service role key, bypasses RLS)
