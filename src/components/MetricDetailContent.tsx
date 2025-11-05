@@ -19,6 +19,9 @@ interface MetricDetailContentProps {
 export function MetricDetailContent({ metric, values, brands = [] }: MetricDetailContentProps) {
   const router = useRouter();
   const [showYTD, setShowYTD] = useState(false);
+  const [aiInsights, setAiInsights] = useState<string[]>([]);
+  const [aiInsightsLoading, setAiInsightsLoading] = useState(false);
+  const [aiInsightsError, setAiInsightsError] = useState<string | null>(null);
   
   // Brand selection state - initialize from localStorage, metric's brand_id, or first brand
   const [selectedBrandId, setSelectedBrandIdState] = useState<string | null>(() => {
@@ -168,6 +171,62 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
   const maxValue = graphData.length > 0 ? Math.max(...graphData.map((d) => d.value)) : 0;
   const minValue = graphData.length > 0 ? Math.min(...graphData.map((d) => d.value)) : 0;
   const valueRange = maxValue - minValue || 1;
+
+  // Fetch AI insights when metric data changes
+  useEffect(() => {
+    const fetchInsights = async () => {
+      // Only fetch if we have data
+      if (!values || values.length === 0) {
+        setAiInsights([]);
+        return;
+      }
+
+      setAiInsightsLoading(true);
+      setAiInsightsError(null);
+
+      try {
+        // Format metric data for API
+        const metricData = {
+          name: metric.name,
+          data_source: metric.data_source || 'Unknown',
+          values: values.map(v => ({
+            year: v.year,
+            month: v.month,
+            value: Number(v.value),
+          })),
+        };
+
+        const response = await fetch('/api/ai/insight', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            metrics: [metricData],
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch insights');
+        }
+
+        const data = await response.json();
+        if (data.insights && Array.isArray(data.insights)) {
+          setAiInsights(data.insights);
+        } else {
+          setAiInsights([]);
+        }
+      } catch (error) {
+        console.error('Error fetching AI insights:', error);
+        setAiInsightsError('Unable to load insights');
+        setAiInsights([]);
+      } finally {
+        setAiInsightsLoading(false);
+      }
+    };
+
+    fetchInsights();
+  }, [metric.id, metric.name, metric.data_source, values]);
 
   return (
     <div className="min-h-screen bg-bg-base">
@@ -472,7 +531,21 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
           <div className="card p-6">
             <h2 className="text-h4 font-semibold text-neutral-900 mb-4">AI Insight</h2>
             <div className="text-body text-neutral-700 leading-relaxed">
-              <p>Traffic has increased significantly this year compared to previous years, with a consistent upward trend in recent months.</p>
+              {aiInsightsLoading ? (
+                <div className="text-neutral-500 italic">Analyzing data...</div>
+              ) : aiInsightsError ? (
+                <div className="text-error-600">{aiInsightsError}</div>
+              ) : aiInsights.length > 0 ? (
+                <ul className="space-y-2">
+                  {aiInsights.map((insight, index) => (
+                    <li key={index}>{insight}</li>
+                  ))}
+                </ul>
+              ) : values.length === 0 ? (
+                <div className="text-neutral-500 italic">Add data to generate insights</div>
+              ) : (
+                <div className="text-neutral-500 italic">No insights available</div>
+              )}
             </div>
           </div>
         </div>
