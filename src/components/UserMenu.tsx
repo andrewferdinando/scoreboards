@@ -23,48 +23,56 @@ export function UserMenu() {
     let mounted = true;
     
     // Get current user
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (!mounted) return;
-      
-      if (error) {
-        console.error('Error getting user:', error);
-        setIsLoading(false);
-        return;
-      }
-      
-      if (user) {
-        setUser({
-          email: user.email || '',
-          name: user.user_metadata?.name || undefined,
-        });
+    async function fetchUser() {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
         
-        // Fetch profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-          .then(({ data, error: profileError }) => {
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('Error getting user:', error);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (user) {
+          setUser({
+            email: user.email || '',
+            name: user.user_metadata?.name || undefined,
+          });
+          
+          // Fetch profile
+          try {
+            const { data, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+            
             if (!mounted) return;
             
             if (!profileError && data) {
               setProfile(data);
             }
-            setIsLoading(false);
-          })
-          .catch((err) => {
+          } catch (err) {
             if (!mounted) return;
             console.error('Error fetching profile:', err);
-            setIsLoading(false);
-          });
-      } else {
+          } finally {
+            if (mounted) {
+              setIsLoading(false);
+            }
+          }
+        } else {
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (!mounted) return;
+        console.error('Error in getUser:', err);
         setIsLoading(false);
       }
-    }).catch((err) => {
-      if (!mounted) return;
-      console.error('Error in getUser:', err);
-      setIsLoading(false);
-    });
+    }
+    
+    fetchUser();
     
     return () => {
       mounted = false;
