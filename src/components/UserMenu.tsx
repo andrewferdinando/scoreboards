@@ -14,8 +14,18 @@ export function UserMenu() {
   const router = useRouter();
 
   useEffect(() => {
+    let mounted = true;
+    
     // Get current user
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (!mounted) return;
+      
+      if (error) {
+        console.error('Error getting user:', error);
+        setIsLoading(false);
+        return;
+      }
+      
       if (user) {
         setUser({
           email: user.email || '',
@@ -28,16 +38,31 @@ export function UserMenu() {
           .select('*')
           .eq('id', user.id)
           .single()
-          .then(({ data, error }) => {
-            if (!error && data) {
+          .then(({ data, error: profileError }) => {
+            if (!mounted) return;
+            
+            if (!profileError && data) {
               setProfile(data);
             }
+            setIsLoading(false);
+          })
+          .catch((err) => {
+            if (!mounted) return;
+            console.error('Error fetching profile:', err);
             setIsLoading(false);
           });
       } else {
         setIsLoading(false);
       }
+    }).catch((err) => {
+      if (!mounted) return;
+      console.error('Error in getUser:', err);
+      setIsLoading(false);
     });
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Close menu when clicking outside

@@ -122,7 +122,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   }, [allMetrics]);
 
   // Get first brand for display (in real app, this would be selected)
-  const selectedBrand = brands[0];
+  const selectedBrand = brands && brands.length > 0 ? brands[0] : null;
   
   return (
     <>
