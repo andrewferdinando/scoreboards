@@ -81,8 +81,8 @@ export function MultiSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50 max-h-64 overflow-y-auto">
-          <div className="py-1">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50 overflow-hidden">
+          <div>
             {options.map((option) => {
               const isSelected = value.includes(option.value);
               return (
