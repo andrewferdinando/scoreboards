@@ -63,9 +63,10 @@ export default function LoginPage() {
 
       if (session) {
         sessionStorage.setItem('login_debug', JSON.stringify({ step: 'redirecting' }));
-        // Use Next.js router for client-side navigation
-        router.push('/');
-        router.refresh();
+        // Clear any error state before redirecting
+        setError(null);
+        // Use window.location for reliable redirect
+        window.location.href = '/';
       } else {
         setError('Session not established. Please try again.');
         setIsLoading(false);
@@ -75,9 +76,23 @@ export default function LoginPage() {
         step: 'exception', 
         error: err instanceof Error ? err.message : String(err) 
       }));
+      
+      // Only show error if it's not a redirect-related issue
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign in';
-      setError(errorMessage);
+      if (!errorMessage.includes('redirect') && !errorMessage.includes('navigation')) {
+        setError(errorMessage);
+      }
       setIsLoading(false);
+      
+      // If we have a session despite the error, redirect anyway
+      try {
+        const { data: { session: checkSession } } = await supabase.auth.getSession();
+        if (checkSession) {
+          window.location.href = '/';
+        }
+      } catch {
+        // Ignore check errors
+      }
     }
   };
 
