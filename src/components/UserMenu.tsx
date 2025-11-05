@@ -10,8 +10,14 @@ export function UserMenu() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Ensure component is mounted before rendering (prevents hydration mismatch)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -105,7 +111,8 @@ export function UserMenu() {
   };
 
 
-  if (isLoading) {
+  // Don't render until mounted (prevents hydration mismatch)
+  if (!isMounted || isLoading) {
     return (
       <div className="w-8 h-8 rounded-full bg-neutral-200 animate-pulse" />
     );
