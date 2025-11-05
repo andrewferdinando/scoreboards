@@ -1,4 +1,4 @@
-import { getMetric } from '@/lib/queries';
+import { getMetric, getUserBrands } from '@/lib/queries';
 import { notFound } from 'next/navigation';
 import { MetricDetailContent } from '@/components/MetricDetailContent';
 import { getSession } from '@/lib/auth';
@@ -18,7 +18,12 @@ export default async function MetricPage({ params }: MetricPageProps) {
   }
 
   const { id } = await params;
-  const metricData = await getMetric(id);
+  
+  // Fetch brands and metric data in parallel
+  const [brands, metricData] = await Promise.all([
+    getUserBrands(),
+    getMetric(id),
+  ]);
 
   if (!metricData) {
     notFound();
@@ -26,5 +31,5 @@ export default async function MetricPage({ params }: MetricPageProps) {
 
   const { values, ...metric } = metricData;
 
-  return <MetricDetailContent metric={metric} values={values} />;
+  return <MetricDetailContent metric={metric} values={values} brands={brands} />;
 }

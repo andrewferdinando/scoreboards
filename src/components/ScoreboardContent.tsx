@@ -28,6 +28,18 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
   
+  // Brand selection state
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(
+    brands && brands.length > 0 ? brands[0].id : null
+  );
+  
+  const selectedBrand = brands.find(b => b.id === selectedBrandId) || brands[0] || null;
+  
+  const brandOptions = brands.map(brand => ({
+    value: brand.id,
+    label: brand.name,
+  }));
+  
   // Available years for selection (2023, 2024, 2025, and current year if > 2025)
   const availableYears = useMemo(() => {
     const years = [2023, 2024, 2025];
@@ -112,13 +124,18 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     { num: 12, short: 'DEC' },
   ];
   
-  // Get all metrics across all brands for the scoreboard
+  // Get all metrics for the selected brand (or all brands if none selected)
   // Memoize this to prevent recalculation on every render
   const allMetrics = useMemo(() => {
+    if (selectedBrandId) {
+      const brand = brands.find(b => b.id === selectedBrandId);
+      return brand ? brand.metrics.map(metric => ({ ...metric, brand_name: brand.name })) : [];
+    }
+    // If no brand selected, show all metrics from all brands
     return brands.flatMap(brand => 
       brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
     );
-  }, [brands]);
+  }, [brands, selectedBrandId]);
 
   // Group metrics by name for display
   const groupedMetrics = useMemo(() => {
@@ -132,9 +149,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     return grouped;
   }, [allMetrics]);
 
-  // Get first brand for display (in real app, this would be selected)
-  const selectedBrand = brands && brands.length > 0 ? brands[0] : null;
-  
   return (
     <>
       <div className="min-h-screen bg-bg-base">
@@ -142,13 +156,19 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
         <div className="border-b border-border-default bg-white">
           <div className="container-custom">
             <div className="flex items-center justify-between h-16">
-              {/* Brand Selector */}
-              <button className="flex items-center gap-2 px-4 py-2 text-body font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
-                <span>{selectedBrand?.name || 'Select Brand'}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+              {/* Brand Selector Dropdown */}
+              {brands.length > 0 ? (
+                <Dropdown
+                  value={selectedBrandId || ''}
+                  options={brandOptions}
+                  onChange={(value) => setSelectedBrandId(value as string)}
+                  placeholder="Select brand"
+                />
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 text-body font-medium text-neutral-500">
+                  <span>No brands available</span>
+                </div>
+              )}
               
               {/* User Menu */}
               <UserMenu />

@@ -6,16 +6,26 @@ import Link from 'next/link';
 import { EditableCell } from './EditableCell';
 import { UserMenu } from './UserMenu';
 import { MultiSelect } from './ui/MultiSelect';
+import { Dropdown } from './ui/Dropdown';
 import { Metric, MetricValue } from '@/types/database';
 
 interface MetricDetailContentProps {
   metric: Metric;
   values: MetricValue[];
+  brands?: Array<{ id: string; name: string }>;
 }
 
-export function MetricDetailContent({ metric, values }: MetricDetailContentProps) {
+export function MetricDetailContent({ metric, values, brands = [] }: MetricDetailContentProps) {
   const router = useRouter();
   const [showYTD, setShowYTD] = useState(false);
+  
+  // Brand selection state (if multiple brands available)
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  
+  const brandOptions = brands.map(brand => ({
+    value: brand.id,
+    label: brand.name,
+  }));
   
   // Get available years (2023 to current year - automatically includes new year on Jan 1st)
   const currentYear = new Date().getFullYear();
@@ -132,16 +142,22 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
   return (
     <div className="min-h-screen bg-bg-base">
       {/* Top Header Bar */}
-      <div className="border-b border-border-default bg-white">
-        <div className="container-custom">
-          <div className="flex items-center justify-between h-16">
-            {/* Brand Selector */}
-            <button className="flex items-center gap-2 px-4 py-2 text-body font-medium text-neutral-700 hover:text-neutral-900 transition-colors">
-              <span>Acme Corp</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+        <div className="border-b border-border-default bg-white">
+          <div className="container-custom">
+            <div className="flex items-center justify-between h-16">
+              {/* Brand Selector Dropdown */}
+              {brands.length > 0 ? (
+                <Dropdown
+                  value={selectedBrandId || brands[0]?.id || ''}
+                  options={brandOptions}
+                  onChange={(value) => setSelectedBrandId(value as string)}
+                  placeholder="Select brand"
+                />
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 text-body font-medium text-neutral-500">
+                  <span>No brands available</span>
+                </div>
+              )}
             
             {/* User Menu */}
             <UserMenu />
