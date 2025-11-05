@@ -75,28 +75,26 @@ export function Dropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50 overflow-hidden">
-          <div>
-            {options.map((option) => {
-              const isSelected = option.value === value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleSelect(option.value)}
-                  className={`w-full text-left px-4 py-2 text-body transition-colors ${
-                    isSelected
-                      ? 'bg-primary-gradient text-white'
-                      : 'text-neutral-700 hover:bg-neutral-50'
-                  }`}
-                  role="option"
-                  aria-selected={isSelected}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
+        <div className="absolute top-full left-0 mt-1 bg-white border border-border-default rounded-md shadow-xl min-w-full z-50">
+          {options.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleSelect(option.value)}
+                className={`w-full text-left px-4 py-2 text-body transition-colors first:rounded-t-md last:rounded-b-md ${
+                  isSelected
+                    ? 'bg-primary-gradient text-white'
+                    : 'text-neutral-700 hover:bg-neutral-50'
+                }`}
+                role="option"
+                aria-selected={isSelected}
+              >
+                {option.label}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
