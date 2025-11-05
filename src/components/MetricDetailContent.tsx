@@ -286,14 +286,14 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
               </div>
             ) : (
               <div className="h-64 relative">
-                <svg className="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
+                <svg className="w-full h-full" viewBox="0 0 800 220" preserveAspectRatio="none">
                   {/* Grid lines */}
                   {[0, 1, 2, 3, 4].map((i) => {
                     const y = 20 + (i * 40);
                     return (
                       <line
                         key={i}
-                        x1="40"
+                        x1="60"
                         y1={y}
                         x2="760"
                         y2={y}
@@ -305,7 +305,7 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                   
                   {/* X-axis */}
                   <line
-                    x1="40"
+                    x1="60"
                     y1="180"
                     x2="760"
                     y2="180"
@@ -315,13 +315,33 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                   
                   {/* Y-axis */}
                   <line
-                    x1="40"
+                    x1="60"
                     y1="180"
-                    x2="40"
+                    x2="60"
                     y2="20"
                     stroke="var(--color-border-default)"
                     strokeWidth="2"
                   />
+                  
+                  {/* Y-axis labels */}
+                  {[0, 1, 2, 3, 4].map((i) => {
+                    const y = 20 + (i * 40);
+                    const value = maxValue - (i / 4) * valueRange;
+                    const labelValue = formatNumber(Math.round(value));
+                    return (
+                      <text
+                        key={i}
+                        x="55"
+                        y={y + 4}
+                        textAnchor="end"
+                        fontSize="12"
+                        fill="var(--color-neutral-600)"
+                        fontFamily="var(--font-mono)"
+                      >
+                        {labelValue}
+                      </text>
+                    );
+                  })}
                   
                   {/* Year lines */}
                   {years.map((year) => {
@@ -341,7 +361,7 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                         <polyline
                           points={yearData
                             .map((d, i) => {
-                              const x = 40 + (i / 11) * 720;
+                              const x = 60 + (i / 11) * 700;
                               const y = 180 - ((d.value - minValue) / valueRange) * 160;
                               return `${x},${y}`;
                             })
@@ -351,7 +371,7 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                           strokeWidth="2"
                         />
                         {yearData.map((d, i) => {
-                          const x = 40 + (i / 11) * 720;
+                          const x = 60 + (i / 11) * 700;
                           const y = 180 - ((d.value - minValue) / valueRange) * 160;
                           return (
                             <circle
@@ -367,17 +387,18 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                     );
                   })}
                   
-                  {/* Month labels */}
+                  {/* Month labels - positioned below the X-axis line */}
                   {months.map((month, i) => {
-                    const x = 40 + (i / 11) * 720;
+                    const x = 60 + (i / 11) * 700;
                     return (
                       <text
                         key={month.num}
                         x={x}
-                        y="195"
+                        y="205"
                         textAnchor="middle"
                         fontSize="12"
-                        fill="var(--color-neutral-500)"
+                        fill="var(--color-neutral-600)"
+                        fontFamily="var(--font-sans)"
                       >
                         {month.short}
                       </text>
