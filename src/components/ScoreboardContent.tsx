@@ -23,10 +23,16 @@ interface ScoreboardContentProps {
 export function ScoreboardContent({ brands: initialBrands, allMetricValues: initialMetricValues }: ScoreboardContentProps) {
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
   const [metricValues, setMetricValues] = useState(initialMetricValues);
+  const [isMounted, setIsMounted] = useState(false);
   const currentYear = new Date().getFullYear();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
+
+  // Ensure component is mounted before rendering (prevents hydration mismatch)
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   // Available years for selection (2023 to current year, at least up to 2025)
   const availableYears = [2023, 2024, 2025];
@@ -105,9 +111,12 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   ];
   
   // Get all metrics across all brands for the scoreboard
-  const allMetrics = brands.flatMap(brand => 
-    brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
-  );
+  // Memoize this to prevent recalculation on every render
+  const allMetrics = useMemo(() => {
+    return brands.flatMap(brand => 
+      brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
+    );
+  }, [brands]);
 
   // Group metrics by name for display
   const groupedMetrics = useMemo(() => {
@@ -123,6 +132,15 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
 
   // Get first brand for display (in real app, this would be selected)
   const selectedBrand = brands && brands.length > 0 ? brands[0] : null;
+  
+  // Don't render until mounted (prevents hydration mismatch)
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="text-body text-neutral-500">Loading...</div>
+      </div>
+    );
+  }
   
   return (
     <>
