@@ -91,9 +91,15 @@ export function UserMenu() {
   }, [isOpen]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
+    try {
+      await supabase.auth.signOut();
+      // Use window.location for a hard redirect to ensure session is cleared
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Still redirect even if signOut fails
+      window.location.href = '/login';
+    }
   };
 
   // Get initials for avatar
