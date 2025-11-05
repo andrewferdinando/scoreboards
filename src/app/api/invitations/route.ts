@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Check if user exists in auth.users
+    // Check if user already exists
     const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (usersError) {
@@ -78,31 +78,73 @@ export async function POST(request: NextRequest) {
     }
     
     const users = usersData?.users || [];
-    const existingUser = users.find(u => u.email === email.toLowerCase());
+    const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
     
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: 'User not found. Please ensure the user has signed up first.' },
-        { status: 404 }
+    let userId: string;
+    
+    if (existingUser) {
+      // User exists - use their ID
+      userId = existingUser.id;
+      
+      // Ensure profile exists
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      
+      if (!existingProfile) {
+        // Create profile
+        await supabaseAdmin
+          .from('profiles')
+          .insert([{
+            id: userId,
+            email: existingUser.email || email,
+            name: existingUser.user_metadata?.name || email.split('@')[0],
+          }]);
+      }
+    } else {
+      // User doesn't exist - invite them using Supabase Auth invite
+      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+        email.toLowerCase(),
+        {
+          data: {
+            brand_id: brand_id,
+            role: role,
+            invited_by: user.id,
+          },
+        }
       );
-    }
-    
-    // Ensure profile exists
-    const { data: existingProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('id', existingUser.id)
-      .single();
-    
-    if (!existingProfile) {
-      // Create profile
+      
+      if (inviteError) {
+        console.error('Error inviting user:', inviteError);
+        return NextResponse.json(
+          { error: inviteError.message || 'Failed to send invitation email' },
+          { status: 500 }
+        );
+      }
+      
+      if (!inviteData?.user) {
+        return NextResponse.json(
+          { error: 'Failed to create invitation' },
+          { status: 500 }
+        );
+      }
+      
+      userId = inviteData.user.id;
+      
+      // Create profile for invited user
       await supabaseAdmin
         .from('profiles')
         .insert([{
-          id: existingUser.id,
-          email: existingUser.email || email,
-          name: existingUser.user_metadata?.name || email.split('@')[0],
-        }]);
+          id: userId,
+          email: email.toLowerCase(),
+          name: email.split('@')[0],
+        }])
+        .on('conflict', 'id', { 
+          onConflict: 'id',
+          ignoreDuplicates: true 
+        });
     }
     
     // Check if membership already exists
@@ -110,7 +152,7 @@ export async function POST(request: NextRequest) {
       .from('brand_memberships')
       .select('*')
       .eq('brand_id', brand_id)
-      .eq('user_id', existingUser.id)
+      .eq('user_id', userId)
       .single();
     
     if (existingMembership) {
@@ -119,7 +161,7 @@ export async function POST(request: NextRequest) {
         .from('brand_memberships')
         .update({ role })
         .eq('brand_id', brand_id)
-        .eq('user_id', existingUser.id);
+        .eq('user_id', userId);
       
       if (updateError) {
         console.error('Error updating membership:', updateError);
@@ -130,7 +172,7 @@ export async function POST(request: NextRequest) {
       }
       
       return NextResponse.json(
-        { message: 'Membership updated successfully' },
+        { message: existingUser ? 'Membership updated successfully' : 'Invitation sent and membership created' },
         { status: 200 }
       );
     }
@@ -140,7 +182,7 @@ export async function POST(request: NextRequest) {
       .from('brand_memberships')
       .insert([{
         brand_id,
-        user_id: existingUser.id,
+        user_id: userId,
         role,
       }]);
     
@@ -153,7 +195,7 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(
-      { message: 'User invited successfully' },
+      { message: existingUser ? 'Membership created successfully' : 'Invitation sent successfully' },
       { status: 201 }
     );
   } catch (error) {
