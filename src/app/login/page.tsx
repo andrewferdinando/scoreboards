@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -61,8 +63,9 @@ export default function LoginPage() {
 
       if (session) {
         sessionStorage.setItem('login_debug', JSON.stringify({ step: 'redirecting' }));
-        // Use router.push instead of window.location to allow middleware to handle session sync
-        window.location.href = '/';
+        // Use Next.js router for client-side navigation
+        router.push('/');
+        router.refresh();
       } else {
         setError('Session not established. Please try again.');
         setIsLoading(false);
