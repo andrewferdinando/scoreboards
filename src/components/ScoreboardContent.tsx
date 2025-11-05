@@ -54,18 +54,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     label: year.toString(),
   }));
   
-  // Filter metric values for the selected year
-  const filteredMetricValues = useMemo(() => {
-    const filtered: Record<string, Record<number, Record<number, number>>> = {};
-    Object.keys(metricValues).forEach(metricId => {
-      if (metricValues[metricId][selectedYear]) {
-        filtered[metricId] = {
-          [selectedYear]: metricValues[metricId][selectedYear]
-        };
-      }
-    });
-    return filtered;
-  }, [metricValues, selectedYear]);
 
   const handleMetricAdded = () => {
     // Force a full page reload to ensure fresh data is fetched
@@ -134,6 +122,37 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
       brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
     );
   }, [brands, selectedBrandId]);
+
+  // Filter metric values by selected brand AND selected year
+  const filteredMetricValues = useMemo(() => {
+    // First filter by brand (if selected)
+    let brandFiltered = metricValues;
+    if (selectedBrandId) {
+      // Get all metric IDs for the selected brand
+      const selectedBrandMetricIds = new Set(
+        allMetrics.map(metric => metric.id)
+      );
+      
+      // Filter metricValues to only include values for metrics in the selected brand
+      brandFiltered = {};
+      Object.keys(metricValues).forEach(metricId => {
+        if (selectedBrandMetricIds.has(metricId)) {
+          brandFiltered[metricId] = metricValues[metricId];
+        }
+      });
+    }
+    
+    // Then filter by selected year
+    const filtered: Record<string, Record<number, Record<number, number>>> = {};
+    Object.keys(brandFiltered).forEach(metricId => {
+      if (brandFiltered[metricId][selectedYear]) {
+        filtered[metricId] = {
+          [selectedYear]: brandFiltered[metricId][selectedYear]
+        };
+      }
+    });
+    return filtered;
+  }, [metricValues, selectedBrandId, selectedYear, allMetrics]);
 
   // Group metrics by name for display
   const groupedMetrics = useMemo(() => {

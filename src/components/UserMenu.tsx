@@ -208,7 +208,10 @@ export function UserMenu() {
         isOpen={showAddBrand}
         onClose={() => setShowAddBrand(false)}
         onSuccess={() => {
-          window.location.reload();
+          // Small delay to ensure the brand is saved before reload
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
         }}
       />
       
