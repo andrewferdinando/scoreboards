@@ -159,9 +159,18 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
               {/* Brand Selector Dropdown */}
               {brands.length > 0 ? (
                 <Dropdown
-                  value={selectedBrandId || brands[0]?.id || ''}
+                  value={selectedBrandId || metric.brand_id || brands[0]?.id || ''}
                   options={brandOptions}
-                  onChange={(value) => setSelectedBrandId(value as string)}
+                  onChange={(value) => {
+                    const newBrandId = value as string;
+                    setSelectedBrandId(newBrandId);
+                    // If changing brands, navigate back to scoreboard filtered by that brand
+                    // The current metric belongs to metric.brand_id, so switching brands
+                    // should take you back to the scoreboard for that brand
+                    if (newBrandId !== metric.brand_id) {
+                      router.push(`/?brand=${newBrandId}`);
+                    }
+                  }}
                   placeholder="Select brand"
                 />
               ) : (
