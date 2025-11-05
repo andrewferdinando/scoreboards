@@ -7,10 +7,29 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 // Client-side Supabase client (uses anon key, respects RLS)
 // Uses createBrowserClient from @supabase/ssr to ensure single instance
 // Returns a client even if env vars are missing (will fail gracefully at runtime)
-export const supabase = createBrowserClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
-)
+// Create as a singleton to prevent multiple instances
+let browserClient: ReturnType<typeof createBrowserClient> | null = null
+
+function getBrowserClient() {
+  if (typeof window === 'undefined') {
+    // Server-side: return a placeholder client
+    return createBrowserClient(
+      supabaseUrl || 'https://placeholder.supabase.co',
+      supabaseAnonKey || 'placeholder-key'
+    )
+  }
+  
+  // Client-side: return singleton instance
+  if (!browserClient) {
+    browserClient = createBrowserClient(
+      supabaseUrl || 'https://placeholder.supabase.co',
+      supabaseAnonKey || 'placeholder-key'
+    )
+  }
+  return browserClient
+}
+
+export const supabase = getBrowserClient()
 
 // Server-side Supabase client (uses service role key, bypasses RLS)
 // Only use this in API routes, server components, or server actions
