@@ -19,8 +19,19 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
   const router = useRouter();
   const [showYTD, setShowYTD] = useState(false);
   
-  // Brand selection state (if multiple brands available)
-  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  // Brand selection state - initialize with the metric's brand_id
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(
+    metric.brand_id || (brands.length > 0 ? brands[0].id : null)
+  );
+  
+  // Update selectedBrandId if metric.brand_id changes
+  useEffect(() => {
+    if (metric.brand_id) {
+      setSelectedBrandId(metric.brand_id);
+    } else if (brands.length > 0 && !selectedBrandId) {
+      setSelectedBrandId(brands[0].id);
+    }
+  }, [metric.brand_id, brands]);
   
   const brandOptions = brands.map(brand => ({
     value: brand.id,
