@@ -33,8 +33,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     brands && brands.length > 0 ? brands[0].id : null
   );
   
-  const selectedBrand = brands.find(b => b.id === selectedBrandId) || brands[0] || null;
-  
   const brandOptions = brands.map(brand => ({
     value: brand.id,
     label: brand.name,
