@@ -133,7 +133,8 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   // Get first brand for display (in real app, this would be selected)
   const selectedBrand = brands && brands.length > 0 ? brands[0] : null;
   
-  // Don't render until mounted (prevents hydration mismatch)
+  // Don't render content until mounted (prevents hydration mismatch)
+  // All hooks must be called before this conditional return
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-bg-base flex items-center justify-center">
