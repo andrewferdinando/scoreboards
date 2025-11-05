@@ -30,6 +30,7 @@ export function Input({
         id={inputId}
         className={`input ${numeric ? 'input-number' : ''} ${error ? 'border-error-500 focus:ring-error-500/20' : ''} ${className}`}
         {...props}
+        suppressHydrationWarning
       />
       {error && (
         <p className="text-caption text-error-600 mt-1">{error}</p>
