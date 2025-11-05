@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { EditableCell } from './EditableCell';
 import { UserMenu } from './UserMenu';
+import { MultiSelect } from './ui/MultiSelect';
 import { Metric, MetricValue } from '@/types/database';
 
 interface MetricDetailContentProps {
@@ -19,14 +20,21 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
   // Get available years (2023 to current year - automatically includes new year on Jan 1st)
   const currentYear = new Date().getFullYear();
   
-  // Available years for selection (2023 to current year)
+  // Available years for selection (2023, 2024, 2025, and current year if > 2025)
   const availableYears = useMemo(() => {
-    const years: number[] = [];
-    for (let year = 2023; year <= currentYear; year++) {
-      years.push(year);
+    const years = [2023, 2024, 2025];
+    if (currentYear > 2025) {
+      for (let year = 2026; year <= currentYear; year++) {
+        years.push(year);
+      }
     }
     return years;
   }, [currentYear]);
+
+  const yearOptions = availableYears.map(year => ({
+    value: year,
+    label: year.toString(),
+  }));
   
   // Selected years state (default to all available years)
   const [selectedYears, setSelectedYears] = useState<number[]>([]);
@@ -154,21 +162,31 @@ export function MetricDetailContent({ metric, values }: MetricDetailContentProps
         </div>
         
         {/* Page Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
           <h1 className="text-h1 font-bold text-neutral-900">{metric.name}</h1>
           
-          {/* YTD Toggle - Always visible */}
-          <div className="flex items-center gap-2">
-            <span className="text-body-sm text-neutral-700 font-medium">Year to date</span>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                className="toggle-input"
-                checked={showYTD}
-                onChange={(e) => setShowYTD(e.target.checked)}
-              />
-              <span className="toggle-slider" />
-            </label>
+          <div className="flex items-center gap-4">
+            {/* Year Multi-Select Dropdown */}
+            <MultiSelect
+              value={selectedYears}
+              options={yearOptions}
+              onChange={(values) => setSelectedYears(values.map(v => Number(v)))}
+              placeholder="Select years"
+            />
+            
+            {/* YTD Toggle - Always visible */}
+            <div className="flex items-center gap-2">
+              <span className="text-body-sm text-neutral-700 font-medium">Year to date</span>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  className="toggle-input"
+                  checked={showYTD}
+                  onChange={(e) => setShowYTD(e.target.checked)}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
           </div>
         </div>
 

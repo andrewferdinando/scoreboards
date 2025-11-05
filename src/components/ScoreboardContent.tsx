@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import { UserMenu } from './UserMenu';
+import { Dropdown } from './ui/Dropdown';
 import type { Brand, Metric } from '@/types/database';
 
 interface MetricWithValues extends Metric {
@@ -24,17 +25,24 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
   const [metricValues, setMetricValues] = useState(initialMetricValues);
   const currentYear = new Date().getFullYear();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
   
-  // Available years for selection (2023 to current year, at least up to 2025)
-  const availableYears = [2023, 2024, 2025];
-  if (currentYear > 2025) {
-    for (let year = 2026; year <= currentYear; year++) {
-      availableYears.push(year);
+  // Available years for selection (2023, 2024, 2025, and current year if > 2025)
+  const availableYears = useMemo(() => {
+    const years = [2023, 2024, 2025];
+    if (currentYear > 2025) {
+      for (let year = 2026; year <= currentYear; year++) {
+        years.push(year);
+      }
     }
-  }
+    return years;
+  }, [currentYear]);
+
+  const yearOptions = availableYears.map(year => ({
+    value: year,
+    label: year.toString(),
+  }));
   
   // Filter metric values for the selected year
   const filteredMetricValues = useMemo(() => {
@@ -162,16 +170,13 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
           <div className="mb-8 flex items-center justify-between">
             <h1 className="text-h1 font-bold text-neutral-900">Scoreboard</h1>
             <div className="flex items-center gap-4">
-              {/* Year Selector Button */}
-              <button
-                onClick={() => {/* TODO: Open dropdown */}}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-border-default rounded-md text-body font-medium text-neutral-700 hover:border-primary-600 hover:text-primary-600 transition-colors"
-              >
-                <span>{selectedYear}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+              {/* Year Selector Dropdown */}
+              <Dropdown
+                value={selectedYear}
+                options={yearOptions}
+                onChange={(value) => setSelectedYear(Number(value))}
+                placeholder="Select year"
+              />
               
               {/* Add Button */}
               <button
