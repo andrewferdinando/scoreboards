@@ -10,22 +10,13 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 // Create as a singleton to prevent multiple instances
 let browserClient: ReturnType<typeof createBrowserClient> | null = null
 
-function getBrowserClient() {
-  // Only create client on client-side
+// Client-side Supabase client - only create when window is available
+// This prevents SSR errors
+export const supabase = (() => {
   if (typeof window === 'undefined') {
-    // Server-side: return a mock client that won't cause errors
-    // This prevents SSR errors but the client should only be used client-side
-    return {
-      auth: {
-        signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Client-side only' } }),
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-        signOut: () => Promise.resolve({ error: null }),
-      },
-      from: () => ({
-        select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
-      }),
-    } as any
+    // Return a placeholder that will be replaced on client-side
+    // This should never be used on server-side
+    return null as any
   }
   
   // Client-side: return singleton instance
@@ -36,9 +27,7 @@ function getBrowserClient() {
     )
   }
   return browserClient
-}
-
-export const supabase = getBrowserClient()
+})()
 
 // Server-side Supabase client (uses service role key, bypasses RLS)
 // Only use this in API routes, server components, or server actions
