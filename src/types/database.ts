@@ -10,6 +10,7 @@ export interface Profile {
   id: string; // matches auth.users.id
   email: string;
   name?: string;
+  is_super_admin?: boolean;
   created_at: string;
 }
 

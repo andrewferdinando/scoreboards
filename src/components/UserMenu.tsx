@@ -2,13 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Profile } from '@/types/database';
+import type { Profile, Brand } from '@/types/database';
+import { AddBrandForm } from './forms/AddBrandForm';
+import { InviteUserForm } from './forms/InviteUserForm';
 
 export function UserMenu() {
   const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddBrand, setShowAddBrand] = useState(false);
+  const [showInviteUser, setShowInviteUser] = useState(false);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +50,24 @@ export function UserMenu() {
             
             if (!profileError && data) {
               setProfile(data);
+              
+              // If super admin, fetch all brands for invite user form
+              if (data.is_super_admin) {
+                try {
+                  const { data: brandsData, error: brandsError } = await supabase
+                    .from('brands')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                  
+                  if (!mounted) return;
+                  
+                  if (!brandsError && brandsData) {
+                    setBrands(brandsData as Brand[]);
+                  }
+                } catch (err) {
+                  console.error('Error fetching brands:', err);
+                }
+              }
             }
           } catch (err) {
             if (!mounted) return;
@@ -145,6 +168,32 @@ export function UserMenu() {
           </div>
           
           <div className="p-2">
+            {profile?.is_super_admin && (
+              <>
+                <div className="px-3 py-2 text-body-sm font-semibold text-neutral-500 uppercase tracking-wider">
+                  Admin
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAddBrand(true);
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-body text-neutral-700 hover:bg-neutral-50 rounded-md transition-colors"
+                >
+                  Add Brand
+                </button>
+                <button
+                  onClick={() => {
+                    setShowInviteUser(true);
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-body text-neutral-700 hover:bg-neutral-50 rounded-md transition-colors"
+                >
+                  Invite User
+                </button>
+                <div className="my-1 border-t border-border-default" />
+              </>
+            )}
             <button
               onClick={handleSignOut}
               className="w-full text-left px-3 py-2 text-body text-neutral-700 hover:bg-neutral-50 rounded-md transition-colors"
@@ -154,6 +203,23 @@ export function UserMenu() {
           </div>
         </div>
       )}
+      
+      <AddBrandForm
+        isOpen={showAddBrand}
+        onClose={() => setShowAddBrand(false)}
+        onSuccess={() => {
+          window.location.reload();
+        }}
+      />
+      
+      <InviteUserForm
+        isOpen={showInviteUser}
+        onClose={() => setShowInviteUser(false)}
+        onSuccess={() => {
+          // Optionally refresh or show success message
+        }}
+        brands={brands}
+      />
     </div>
   );
 }
