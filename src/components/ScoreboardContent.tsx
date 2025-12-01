@@ -387,7 +387,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                               <div className="flex items-center justify-center">
                                 <ImportanceIndicator
                                   importance={(metric.importance || 'green') as Importance}
-                                  metricId={metric.id}
                                   onUpdate={(newImportance) => handleImportanceUpdate(metric.id, newImportance)}
                                 />
                               </div>
