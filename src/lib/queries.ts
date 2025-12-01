@@ -32,7 +32,9 @@ export async function getBrandMetrics(brandId: string) {
     .from('metrics')
     .select('*')
     .eq('brand_id', brandId)
-    .order('created_at', { ascending: false });
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: true })
+    .order('id', { ascending: true });
 
   if (error) {
     console.error('Error fetching metrics:', error);
@@ -226,6 +228,44 @@ export async function deleteMetric(metricId: string) {
 
   if (error) {
     console.error('Error deleting metric:', error);
+    throw error;
+  }
+}
+
+// Update metric order for a brand
+export async function updateMetricOrder(brandId: string, orderedMetricIds: string[]) {
+  const supabase = await createClient();
+  
+  // Validate that all metrics belong to the brand
+  const { data: existingMetrics, error: fetchError } = await supabase
+    .from('metrics')
+    .select('id, brand_id')
+    .in('id', orderedMetricIds);
+
+  if (fetchError) {
+    console.error('Error validating metrics:', fetchError);
+    throw fetchError;
+  }
+
+  // Check that all metrics belong to the brand
+  const invalidMetrics = existingMetrics?.filter(m => m.brand_id !== brandId);
+  if (invalidMetrics && invalidMetrics.length > 0) {
+    throw new Error('Some metrics do not belong to the specified brand');
+  }
+
+  // Update sort_order for each metric (1, 2, 3, ...)
+  const updates = orderedMetricIds.map((id, index) => ({
+    id,
+    sort_order: index + 1,
+  }));
+
+  // Use upsert to update multiple rows
+  const { error } = await supabase
+    .from('metrics')
+    .upsert(updates, { onConflict: 'id' });
+
+  if (error) {
+    console.error('Error updating metric order:', error);
     throw error;
   }
 }

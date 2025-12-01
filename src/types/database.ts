@@ -28,6 +28,7 @@ export interface Metric {
   name: string;
   data_source: string | null;
   importance: Importance | null;
+  sort_order: number | null;
   created_at: string;
 }
 

@@ -2,6 +2,21 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import { UserMenu } from './UserMenu';
@@ -24,6 +39,107 @@ interface BrandWithMetrics extends Brand {
 interface ScoreboardContentProps {
   brands: BrandWithMetrics[];
   allMetricValues: Record<string, Record<number, Record<number, number>>>;
+}
+
+// Sortable row component for drag-and-drop
+function SortableRow({ 
+  metric, 
+  isFirstInGroup, 
+  months, 
+  filteredMetricValues, 
+  selectedYear,
+  onValueSaved,
+  onImportanceUpdate,
+  onDeleteClick,
+}: {
+  metric: MetricWithValues;
+  isFirstInGroup: boolean;
+  months: Array<{ num: number; short: string }>;
+  filteredMetricValues: Record<string, Record<number, Record<number, number>>>;
+  selectedYear: number;
+  onValueSaved: (metricId: string, year: number, month: number, value: number | null) => void;
+  onImportanceUpdate: (metricId: string, importance: Importance) => Promise<void>;
+  onDeleteClick: (metric: Metric) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: metric.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <tr ref={setNodeRef} style={style} className="border-b border-border-grid">
+      <td className="table-cell text-center w-6 cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+        <div className="flex items-center justify-center text-neutral-400 hover:text-neutral-600 py-2 touch-none">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 5h2v2H9V5zm0 6h2v2H9v-2zm0 6h2v2H9v-2zm4-8h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z" />
+          </svg>
+        </div>
+      </td>
+      <td className="table-cell">
+        {isFirstInGroup ? (
+          <div>
+            <Link 
+              href={`/metric/${metric.id}`}
+              className="text-neutral-900 font-semibold text-body hover:text-primary-600 transition-colors block"
+            >
+              {metric.name}
+            </Link>
+            {metric.data_source && (
+              <div className="text-body-sm text-neutral-500 mt-1">
+                {metric.data_source}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-body-sm text-neutral-500">
+            {metric.data_source || '-'}
+          </div>
+        )}
+      </td>
+      <td className="table-cell text-center">
+        <div className="flex items-center justify-center">
+          <ImportanceIndicator
+            importance={(metric.importance || 'green') as Importance}
+            onUpdate={(newImportance) => onImportanceUpdate(metric.id, newImportance)}
+          />
+        </div>
+      </td>
+      {months.map((month) => {
+        const value = filteredMetricValues[metric.id]?.[selectedYear]?.[month.num] || null;
+        return (
+          <td
+            key={month.num}
+            className="table-cell table-cell-numeric"
+          >
+            <EditableCell
+              metricId={metric.id}
+              year={selectedYear}
+              month={month.num}
+              value={value}
+              onSave={onValueSaved}
+            />
+          </td>
+        );
+      })}
+      <td className="table-cell text-center">
+        <button
+          onClick={() => onDeleteClick(metric)}
+          className="text-neutral-400 hover:text-error-600 transition-colors p-1"
+          aria-label="Delete metric"
+          title="Delete metric"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </td>
+    </tr>
+  );
 }
 
 export function ScoreboardContent({ brands: initialBrands, allMetricValues: initialMetricValues }: ScoreboardContentProps) {
@@ -194,7 +310,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     return filtered;
   }, [metricValues, selectedBrandId, selectedYear, allMetrics]);
 
-  // Group metrics by name for display
+  // Group metrics by name for display (maintain grouping but respect sort_order within groups)
   const groupedMetrics = useMemo(() => {
     const grouped: Record<string, typeof allMetrics> = {};
     allMetrics.forEach(metric => {
@@ -203,8 +319,84 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
       }
       grouped[metric.name].push(metric);
     });
+    // Sort each group by sort_order
+    Object.keys(grouped).forEach(key => {
+      grouped[key].sort((a, b) => {
+        const aOrder = a.sort_order ?? 999999;
+        const bOrder = b.sort_order ?? 999999;
+        return aOrder - bOrder;
+      });
+    });
     return grouped;
   }, [allMetrics]);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before starting drag
+      },
+    })
+  );
+
+  // Handle drag end to reorder metrics
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !selectedBrandId) return;
+
+    const oldIndex = allMetrics.findIndex((m) => m.id === active.id);
+    const newIndex = allMetrics.findIndex((m) => m.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = arrayMove(allMetrics, oldIndex, newIndex);
+    const orderedMetricIds = newOrder.map((m) => m.id);
+
+    // Optimistically update local state
+    if (selectedBrandId) {
+      setMetricsState(prev => prev.map(brand => {
+        if (brand.id !== selectedBrandId) return brand;
+        // Update metrics in the correct order, maintaining all metric properties
+        const brandMetricIds = new Set(newOrder.filter(m => m.brand_id === selectedBrandId).map(m => m.id));
+        return {
+          ...brand,
+          metrics: brand.metrics
+            .filter(m => brandMetricIds.has(m.id))
+            .sort((a, b) => {
+              const aIndex = newOrder.findIndex(m => m.id === a.id);
+              const bIndex = newOrder.findIndex(m => m.id === b.id);
+              return aIndex - bIndex;
+            }),
+        };
+      }));
+    }
+
+    // Persist to server
+    try {
+      const response = await fetch('/api/metrics/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          brand_id: selectedBrandId,
+          ordered_metric_ids: orderedMetricIds,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update metric order');
+      }
+
+      showToast('Metric order updated successfully', 'success');
+    } catch (error) {
+      console.error('Error updating metric order:', error);
+      showToast(error instanceof Error ? error.message : 'Failed to update metric order', 'error');
+      // Revert on error - reload the page to get correct order
+      window.location.reload();
+    }
+  }, [allMetrics, selectedBrandId, showToast]);
 
   // Toast helper
   const showToast = useCallback((message: string, type: ToastType) => {
@@ -356,98 +548,58 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
             </div>
           ) : (
             <div className="card overflow-x-auto p-0">
-              <table className="table">
-                <thead className="table-header">
-                  <tr>
-                    <th className="table-cell table-cell-header text-left" style={{ minWidth: '150px', width: '150px' }}>Metric</th>
-                    <th className="table-cell table-cell-header text-center" style={{ minWidth: '30px', width: '30px' }}></th>
-                    {months.map((month) => (
-                      <th
-                        key={month.num}
-                        className="table-cell table-cell-header text-center"
-                        style={{ minWidth: '60px', width: '60px' }}
-                      >
-                        {month.short}
-                      </th>
-                    ))}
-                    <th className="table-cell table-cell-header text-center" style={{ minWidth: '50px', width: '50px' }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(groupedMetrics).map(([metricName, metricsGroup]) => (
-                    <React.Fragment key={metricName}>
-                      {metricsGroup.map((metric, metricIndex) => {
-                        const isFirstInGroup = metricIndex === 0;
-                        return (
-                          <tr
-                            key={metric.id}
-                            className="border-b border-border-grid"
-                          >
-                            <td className="table-cell">
-                              {isFirstInGroup ? (
-                                <div>
-                                  <Link 
-                                    href={`/metric/${metric.id}`}
-                                    className="text-neutral-900 font-semibold text-body hover:text-primary-600 transition-colors block"
-                                  >
-                                    {metric.name}
-                                  </Link>
-                                  {metric.data_source && (
-                                    <div className="text-body-sm text-neutral-500 mt-1">
-                                      {metric.data_source}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="text-body-sm text-neutral-500">
-                                  {metric.data_source || '-'}
-                                </div>
-                              )}
-                            </td>
-                            <td className="table-cell text-center">
-                              <div className="flex items-center justify-center">
-                                <ImportanceIndicator
-                                  importance={(metric.importance || 'green') as Importance}
-                                  onUpdate={(newImportance) => handleImportanceUpdate(metric.id, newImportance)}
-                                />
-                              </div>
-                            </td>
-                            {months.map((month) => {
-                              const value = filteredMetricValues[metric.id]?.[selectedYear]?.[month.num] || null;
-                              return (
-                                <td
-                                  key={month.num}
-                                  className="table-cell table-cell-numeric"
-                                >
-                                  <EditableCell
-                                    metricId={metric.id}
-                                    year={selectedYear}
-                                    month={month.num}
-                                    value={value}
-                                    onSave={handleValueSaved}
-                                  />
-                                </td>
-                              );
-                            })}
-                            <td className="table-cell text-center">
-                              <button
-                                onClick={() => setDeleteConfirmMetric(metric)}
-                                className="text-neutral-400 hover:text-error-600 transition-colors p-1"
-                                aria-label="Delete metric"
-                                title="Delete metric"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <table className="table">
+                  <thead className="table-header">
+                    <tr>
+                      <th className="table-cell table-cell-header text-center" style={{ minWidth: '30px', width: '30px' }}></th>
+                      <th className="table-cell table-cell-header text-left" style={{ minWidth: '150px', width: '150px' }}>Metric</th>
+                      <th className="table-cell table-cell-header text-center" style={{ minWidth: '30px', width: '30px' }}></th>
+                      {months.map((month) => (
+                        <th
+                          key={month.num}
+                          className="table-cell table-cell-header text-center"
+                          style={{ minWidth: '60px', width: '60px' }}
+                        >
+                          {month.short}
+                        </th>
+                      ))}
+                      <th className="table-cell table-cell-header text-center" style={{ minWidth: '50px', width: '50px' }}></th>
+                    </tr>
+                  </thead>
+                  <SortableContext
+                    items={allMetrics.map((m) => m.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <tbody>
+                      {Object.entries(groupedMetrics).map(([metricName, metricsGroup]) => (
+                        <React.Fragment key={metricName}>
+                          {metricsGroup.map((metric, metricIndex) => {
+                            const isFirstInGroup = metricIndex === 0;
+                            return (
+                              <SortableRow
+                                key={metric.id}
+                                metric={metric}
+                                isFirstInGroup={isFirstInGroup}
+                                months={months}
+                                filteredMetricValues={filteredMetricValues}
+                                selectedYear={selectedYear}
+                                onValueSaved={handleValueSaved}
+                                onImportanceUpdate={handleImportanceUpdate}
+                                onDeleteClick={setDeleteConfirmMetric}
+                              />
+                            );
+                          })}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </SortableContext>
+                </table>
+              </DndContext>
             </div>
           )}
         </div>

@@ -13,12 +13,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get the max sort_order for this brand to assign the new metric at the end
+    const { data: maxSortData, error: maxSortError } = await supabaseAdmin
+      .from('metrics')
+      .select('sort_order')
+      .eq('brand_id', brand_id)
+      .order('sort_order', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .single();
+
+    const nextSortOrder = maxSortData?.sort_order 
+      ? (maxSortData.sort_order as number) + 1 
+      : 1;
+
     const { data, error } = await supabaseAdmin
       .from('metrics')
       .insert({
         brand_id,
         name: name.trim(),
         data_source: data_source?.trim() || null,
+        sort_order: nextSortOrder,
       })
       .select()
       .single();
@@ -40,6 +54,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 
 
 
