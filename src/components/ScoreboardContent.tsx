@@ -330,6 +330,16 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     return grouped;
   }, [allMetrics]);
 
+  // Toast helper
+  const showToast = useCallback((message: string, type: ToastType) => {
+    const id = Math.random().toString(36).substring(7);
+    setToasts(prev => [...prev, { id, message, type }]);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  }, []);
+
   // Drag and drop sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -397,16 +407,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
       window.location.reload();
     }
   }, [allMetrics, selectedBrandId, showToast]);
-
-  // Toast helper
-  const showToast = useCallback((message: string, type: ToastType) => {
-    const id = Math.random().toString(36).substring(7);
-    setToasts(prev => [...prev, { id, message, type }]);
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
 
   // Handle importance update
   const handleImportanceUpdate = useCallback(async (metricId: string, importance: Importance) => {
