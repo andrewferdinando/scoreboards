@@ -489,7 +489,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
           }
         >
           <p className="text-body text-neutral-700">
-            This will delete this metric and all of its values for this brand. This can't be undone.
+            This will delete this metric and all of its values for this brand. This cannot be undone.
           </p>
         </Modal>
       )}

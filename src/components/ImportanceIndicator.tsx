@@ -5,7 +5,7 @@ import type { Importance } from '@/types/database';
 
 interface ImportanceIndicatorProps {
   importance: Importance;
-  metricId: string;
+  metricId: string; // Used for API calls in parent component
   onUpdate: (importance: Importance) => Promise<void>;
 }
 
@@ -15,7 +15,7 @@ const importanceOptions: { value: Importance; label: string; color: string }[] =
   { value: 'red', label: 'Red', color: '#EF4444' }, // error-500
 ];
 
-export function ImportanceIndicator({ importance, metricId, onUpdate }: ImportanceIndicatorProps) {
+export function ImportanceIndicator({ importance, metricId: _metricId, onUpdate }: ImportanceIndicatorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentImportance, setCurrentImportance] = useState<Importance>(importance);
   const [isUpdating, setIsUpdating] = useState(false);
