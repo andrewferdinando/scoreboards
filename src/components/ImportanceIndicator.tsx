@@ -74,7 +74,7 @@ export function ImportanceIndicator({ importance, onUpdate }: ImportanceIndicato
         type="button"
         onClick={() => !isUpdating && setIsOpen(!isOpen)}
         disabled={isUpdating}
-        className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-3 h-3 rounded-full flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ backgroundColor: currentOption?.color || '#10B981' }}
         aria-label={`Importance: ${currentOption?.label || 'Green'}. Click to change.`}
         title={`Importance: ${currentOption?.label || 'Green'}`}

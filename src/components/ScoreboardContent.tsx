@@ -359,8 +359,8 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
               <table className="table">
                 <thead className="table-header">
                   <tr>
-                    <th className="table-cell table-cell-header text-center" style={{ minWidth: '50px', width: '50px' }}></th>
                     <th className="table-cell table-cell-header text-left" style={{ minWidth: '150px', width: '150px' }}>Metric</th>
+                    <th className="table-cell table-cell-header text-center" style={{ minWidth: '30px', width: '30px' }}></th>
                     {months.map((month) => (
                       <th
                         key={month.num}
@@ -383,14 +383,6 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                             key={metric.id}
                             className="border-b border-border-grid"
                           >
-                            <td className="table-cell text-center">
-                              <div className="flex items-center justify-center">
-                                <ImportanceIndicator
-                                  importance={(metric.importance || 'green') as Importance}
-                                  onUpdate={(newImportance) => handleImportanceUpdate(metric.id, newImportance)}
-                                />
-                              </div>
-                            </td>
                             <td className="table-cell">
                               {isFirstInGroup ? (
                                 <div>
@@ -411,6 +403,14 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                                   {metric.data_source || '-'}
                                 </div>
                               )}
+                            </td>
+                            <td className="table-cell text-center">
+                              <div className="flex items-center justify-center">
+                                <ImportanceIndicator
+                                  importance={(metric.importance || 'green') as Importance}
+                                  onUpdate={(newImportance) => handleImportanceUpdate(metric.id, newImportance)}
+                                />
+                              </div>
                             </td>
                             {months.map((month) => {
                               const value = filteredMetricValues[metric.id]?.[selectedYear]?.[month.num] || null;
