@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the max sort_order for this brand to assign the new metric at the end
-    const { data: maxSortData, error: maxSortError } = await supabaseAdmin
+    const { data: maxSortData } = await supabaseAdmin
       .from('metrics')
       .select('sort_order')
       .eq('brand_id', brand_id)
