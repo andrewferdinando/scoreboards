@@ -1,5 +1,5 @@
 import { createClient } from './auth';
-import type { Brand, Metric, MetricValue } from '../types/database';
+import type { Brand, Metric, MetricValue, Importance } from '../types/database';
 import type { Profile } from '../types/database';
 
 // Get all brands for the current user
@@ -197,5 +197,36 @@ export async function getCurrentUserProfile(): Promise<Profile | null> {
 export async function isSuperAdmin(): Promise<boolean> {
   const profile = await getCurrentUserProfile();
   return profile?.is_super_admin === true;
+}
+
+// Update metric importance
+export async function updateMetricImportance(metricId: string, importance: Importance) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('metrics')
+    .update({ importance })
+    .eq('id', metricId);
+
+  if (error) {
+    console.error('Error updating metric importance:', error);
+    throw error;
+  }
+}
+
+// Delete a metric (and its associated metric_values via CASCADE)
+export async function deleteMetric(metricId: string) {
+  const supabase = await createClient();
+  
+  // The foreign key already has ON DELETE CASCADE, so deleting the metric
+  // will automatically delete all associated metric_values
+  const { error } = await supabase
+    .from('metrics')
+    .delete()
+    .eq('id', metricId);
+
+  if (error) {
+    console.error('Error deleting metric:', error);
+    throw error;
+  }
 }
 

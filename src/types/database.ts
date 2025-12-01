@@ -20,11 +20,14 @@ export interface BrandMembership {
   role: 'owner' | 'admin' | 'member';
 }
 
+export type Importance = 'green' | 'amber' | 'red';
+
 export interface Metric {
   id: string;
   brand_id: string;
   name: string;
   data_source: string | null;
+  importance: Importance | null;
   created_at: string;
 }
 

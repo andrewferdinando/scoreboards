@@ -6,8 +6,12 @@ import { AddMetricForm } from '@/components/forms/AddMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import { UserMenu } from './UserMenu';
 import { Dropdown } from './ui/Dropdown';
+import { ImportanceIndicator } from './ImportanceIndicator';
+import { ToastContainer, type ToastType } from './ui/Toast';
+import { Modal } from './ui/Modal';
+import { Button } from './ui/Button';
 import { getSelectedBrandId, setSelectedBrandId } from '@/lib/brandSelection';
-import type { Brand, Metric } from '@/types/database';
+import type { Brand, Metric, Importance } from '@/types/database';
 
 interface MetricWithValues extends Metric {
   values?: Array<{ year: number; month: number; value: number }>;
@@ -28,6 +32,12 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: ToastType }>>([]);
+  const [deleteConfirmMetric, setDeleteConfirmMetric] = useState<Metric | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Track metrics state to allow removal after deletion
+  const [metricsState, setMetricsState] = useState(brands);
   
   // Brand selection state - initialize from localStorage or default to first brand
   const [selectedBrandId, setSelectedBrandIdState] = useState<string | null>(() => {
@@ -135,18 +145,23 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     { num: 12, short: 'DEC' },
   ];
   
+  // Sync metricsState with brands prop changes
+  useEffect(() => {
+    setMetricsState(brands);
+  }, [brands]);
+
   // Get all metrics for the selected brand (or all brands if none selected)
   // Memoize this to prevent recalculation on every render
   const allMetrics = useMemo(() => {
     if (selectedBrandId) {
-      const brand = brands.find(b => b.id === selectedBrandId);
+      const brand = metricsState.find(b => b.id === selectedBrandId);
       return brand ? brand.metrics.map(metric => ({ ...metric, brand_name: brand.name })) : [];
     }
     // If no brand selected, show all metrics from all brands
-    return brands.flatMap(brand => 
+    return metricsState.flatMap(brand => 
       brand.metrics.map(metric => ({ ...metric, brand_name: brand.name }))
     );
-  }, [brands, selectedBrandId]);
+  }, [metricsState, selectedBrandId]);
 
   // Filter metric values by selected brand AND selected year
   const filteredMetricValues = useMemo(() => {
@@ -190,6 +205,84 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     });
     return grouped;
   }, [allMetrics]);
+
+  // Toast helper
+  const showToast = useCallback((message: string, type: ToastType) => {
+    const id = Math.random().toString(36).substring(7);
+    setToasts(prev => [...prev, { id, message, type }]);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  }, []);
+
+  // Handle importance update
+  const handleImportanceUpdate = useCallback(async (metricId: string, importance: Importance) => {
+    try {
+      const response = await fetch(`/api/metrics/${metricId}/importance`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ importance }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update importance');
+      }
+
+      // Update local state
+      setMetricsState(prev => prev.map(brand => ({
+        ...brand,
+        metrics: brand.metrics.map(metric =>
+          metric.id === metricId ? { ...metric, importance } : metric
+        ),
+      })));
+
+      showToast('Importance updated successfully', 'success');
+    } catch (error) {
+      console.error('Error updating importance:', error);
+      showToast(error instanceof Error ? error.message : 'Failed to update importance', 'error');
+      throw error; // Re-throw so ImportanceIndicator can handle it
+    }
+  }, [showToast]);
+
+  // Handle metric deletion
+  const handleDeleteMetric = useCallback(async (metricId: string) => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/metrics/${metricId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete metric');
+      }
+
+      // Remove metric from local state
+      setMetricsState(prev => prev.map(brand => ({
+        ...brand,
+        metrics: brand.metrics.filter(metric => metric.id !== metricId),
+      })));
+
+      // Remove metric values from local state
+      setMetricValues(prev => {
+        const newValues = { ...prev };
+        delete newValues[metricId];
+        return newValues;
+      });
+
+      showToast('Metric deleted successfully', 'success');
+      setDeleteConfirmMetric(null);
+    } catch (error) {
+      console.error('Error deleting metric:', error);
+      showToast(error instanceof Error ? error.message : 'Failed to delete metric', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [showToast]);
 
   return (
     <>
@@ -266,6 +359,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
               <table className="table">
                 <thead className="table-header">
                   <tr>
+                    <th className="table-cell table-cell-header text-center" style={{ minWidth: '50px', width: '50px' }}></th>
                     <th className="table-cell table-cell-header text-left" style={{ minWidth: '150px', width: '150px' }}>Metric</th>
                     {months.map((month) => (
                       <th
@@ -276,6 +370,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                         {month.short}
                       </th>
                     ))}
+                    <th className="table-cell table-cell-header text-center" style={{ minWidth: '50px', width: '50px' }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,6 +383,15 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                             key={metric.id}
                             className="border-b border-border-grid"
                           >
+                            <td className="table-cell text-center">
+                              <div className="flex items-center justify-center">
+                                <ImportanceIndicator
+                                  importance={(metric.importance || 'green') as Importance}
+                                  metricId={metric.id}
+                                  onUpdate={(newImportance) => handleImportanceUpdate(metric.id, newImportance)}
+                                />
+                              </div>
+                            </td>
                             <td className="table-cell">
                               {isFirstInGroup ? (
                                 <div>
@@ -326,6 +430,18 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                                 </td>
                               );
                             })}
+                            <td className="table-cell text-center">
+                              <button
+                                onClick={() => setDeleteConfirmMetric(metric)}
+                                className="text-neutral-400 hover:text-error-600 transition-colors p-1"
+                                aria-label="Delete metric"
+                                title="Delete metric"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </td>
                           </tr>
                         );
                       })}
@@ -345,6 +461,41 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
           onClose={() => setShowAddMetricForm(false)}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmMetric && (
+        <Modal
+          isOpen={true}
+          onClose={() => !isDeleting && setDeleteConfirmMetric(null)}
+          title="Delete metric?"
+          className="max-w-md"
+          footer={
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setDeleteConfirmMetric(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => handleDeleteMetric(deleteConfirmMetric.id)}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete metric'}
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-body text-neutral-700">
+            This will delete this metric and all of its values for this brand. This can't be undone.
+          </p>
+        </Modal>
+      )}
+
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </>
   );
 }
