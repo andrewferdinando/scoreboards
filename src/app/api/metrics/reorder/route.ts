@@ -37,22 +37,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Update sort_order for each metric (1, 2, 3, ...)
-    const updates = ordered_metric_ids.map((id: string, index: number) => ({
-      id,
-      sort_order: index + 1,
-    }));
+    // Update each metric individually to avoid null constraint issues
+    for (let index = 0; index < ordered_metric_ids.length; index++) {
+      const metricId = ordered_metric_ids[index];
+      const { error } = await supabaseAdmin
+        .from('metrics')
+        .update({ sort_order: index + 1 })
+        .eq('id', metricId)
+        .eq('brand_id', brand_id); // Ensure we only update metrics for this brand
 
-    // Use upsert to update multiple rows
-    const { error } = await supabaseAdmin
-      .from('metrics')
-      .upsert(updates, { onConflict: 'id' });
-
-    if (error) {
-      console.error('Error updating metric order:', error);
-      return NextResponse.json(
-        { error: error.message || 'Failed to update metric order' },
-        { status: 500 }
-      );
+      if (error) {
+        console.error(`Error updating metric ${metricId}:`, error);
+        return NextResponse.json(
+          { error: error.message || 'Failed to update metric order' },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
