@@ -32,7 +32,7 @@ export async function getBrandMetrics(brandId: string) {
     .from('metrics')
     .select('*')
     .eq('brand_id', brandId)
-    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('sort_order', { ascending: true, nullsFirst: true })
     .order('created_at', { ascending: true })
     .order('id', { ascending: true });
 
