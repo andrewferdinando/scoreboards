@@ -26,6 +26,7 @@ import { ToastContainer, type ToastType } from './ui/Toast';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { getSelectedBrandId, setSelectedBrandId } from '@/lib/brandSelection';
+import { getAvailableYears, getDefaultYear } from '@/lib/years';
 import type { Brand, Metric, Importance } from '@/types/database';
 
 interface MetricWithValues extends Metric {
@@ -145,9 +146,27 @@ function SortableRow({
 export function ScoreboardContent({ brands: initialBrands, allMetricValues: initialMetricValues }: ScoreboardContentProps) {
   const [showAddMetricForm, setShowAddMetricForm] = useState(false);
   const [metricValues, setMetricValues] = useState(initialMetricValues);
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(currentYear);
   const brands = initialBrands;
+  
+  // Get available years dynamically
+  const availableYears = useMemo(() => getAvailableYears({ startYear: 2023, yearsAhead: 1 }), []);
+  const defaultYear = useMemo(() => getDefaultYear(availableYears), [availableYears]);
+  
+  // Initialize selectedYear with default, but allow it to be overridden
+  const [selectedYear, setSelectedYear] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Could check localStorage or URL params here if needed in the future
+      return defaultYear;
+    }
+    return defaultYear;
+  });
+  
+  // Sync selectedYear if defaultYear changes (e.g., on Jan 1st when new year becomes available)
+  useEffect(() => {
+    if (!availableYears.includes(selectedYear)) {
+      setSelectedYear(defaultYear);
+    }
+  }, [availableYears, defaultYear, selectedYear]);
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: ToastType }>>([]);
   const [deleteConfirmMetric, setDeleteConfirmMetric] = useState<Metric | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -189,21 +208,10 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
     label: brand.name,
   }));
   
-  // Available years for selection (2023, 2024, 2025, and current year if > 2025)
-  const availableYears = useMemo(() => {
-    const years = [2023, 2024, 2025];
-    if (currentYear > 2025) {
-      for (let year = 2026; year <= currentYear; year++) {
-        years.push(year);
-      }
-    }
-    return years;
-  }, [currentYear]);
-
-  const yearOptions = availableYears.map(year => ({
+  const yearOptions = useMemo(() => availableYears.map(year => ({
     value: year,
     label: year.toString(),
-  }));
+  })), [availableYears]);
   
 
   const handleMetricAdded = () => {

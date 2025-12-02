@@ -134,12 +134,12 @@ export async function getAllMetricValuesForYear(year: number) {
   return organized;
 }
 
-// Get all metric values for years 2023-2025 (or current year if > 2025)
+// Get all metric values for available years (dynamically calculated)
 // Organized as: metric_id -> year -> month -> value
 export async function getAllMetricValuesForYears() {
   const currentYear = new Date().getFullYear();
   const startYear = 2023;
-  const endYear = Math.max(currentYear, 2025); // At least up to 2025
+  const endYear = currentYear + 1; // Current year + 1 year ahead
   
   const supabase = await createClient();
   const { data, error } = await supabase

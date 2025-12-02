@@ -8,6 +8,7 @@ import { UserMenu } from './UserMenu';
 import { MultiSelect } from './ui/MultiSelect';
 import { Dropdown } from './ui/Dropdown';
 import { getSelectedBrandId, setSelectedBrandId } from '@/lib/brandSelection';
+import { getAvailableYears } from '@/lib/years';
 import { Metric, MetricValue } from '@/types/database';
 
 interface MetricDetailContentProps {
@@ -60,19 +61,8 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
     label: brand.name,
   }));
   
-  // Get available years (2023 to current year - automatically includes new year on Jan 1st)
-  const currentYear = new Date().getFullYear();
-  
-  // Available years for selection (2023, 2024, 2025, and current year if > 2025)
-  const availableYears = useMemo(() => {
-    const years = [2023, 2024, 2025];
-    if (currentYear > 2025) {
-      for (let year = 2026; year <= currentYear; year++) {
-        years.push(year);
-      }
-    }
-    return years;
-  }, [currentYear]);
+  // Get available years dynamically (2023 to current year + 1 year ahead)
+  const availableYears = useMemo(() => getAvailableYears({ startYear: 2023, yearsAhead: 1 }), []);
 
   const yearOptions = availableYears.map(year => ({
     value: year,
@@ -451,8 +441,10 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                       
                       if (yearData.length === 0) return null;
                       
-                      const yearColor = year === 2023 ? 'var(--color-neutral-400)' :
-                                       year === 2024 ? 'var(--color-primary-600)' :
+                      // Dynamic year colors: assign colors based on year position in available years
+                      const yearIndex = availableYears.indexOf(year);
+                      const yearColor = yearIndex === 0 ? 'var(--color-neutral-400)' :
+                                       yearIndex === 1 ? 'var(--color-primary-600)' :
                                        'var(--color-info-500)';
                       
                       return (
@@ -509,8 +501,10 @@ export function MetricDetailContent({ metric, values, brands = [] }: MetricDetai
                 {/* Legend - positioned inside the chart container with proper padding */}
                 <div className="chart-legend">
                   {years.map((year) => {
-                    const yearColor = year === 2023 ? 'var(--color-neutral-400)' :
-                                     year === 2024 ? 'var(--color-primary-600)' :
+                    // Dynamic year colors: assign colors based on year position in available years
+                    const yearIndex = availableYears.indexOf(year);
+                    const yearColor = yearIndex === 0 ? 'var(--color-neutral-400)' :
+                                     yearIndex === 1 ? 'var(--color-primary-600)' :
                                      'var(--color-info-500)';
                     return (
                       <div key={year} className="chart-legend-item">

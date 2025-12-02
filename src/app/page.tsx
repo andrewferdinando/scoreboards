@@ -41,7 +41,7 @@ export default async function ScoreboardPage() {
       })
     );
 
-    // Get all metric values for years 2023-2025 (or current year if > 2025)
+    // Get all metric values for available years (dynamically calculated)
     let allMetricValues = {};
     try {
       allMetricValues = await getAllMetricValuesForYears();
