@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { AddMetricForm } from '@/components/forms/AddMetricForm';
+import { EditMetricForm } from '@/components/forms/EditMetricForm';
 import { EditableCell } from '@/components/EditableCell';
 import { UserMenu } from './UserMenu';
 import { Dropdown } from './ui/Dropdown';
@@ -61,6 +62,7 @@ function SortableRow({
   onValueSaved: (metricId: string, year: number, month: number, value: number | null) => void;
   onImportanceUpdate: (metricId: string, importance: Importance) => Promise<void>;
   onDeleteClick: (metric: Metric) => void;
+  onEditClick: (metric: Metric) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: metric.id,
@@ -83,18 +85,34 @@ function SortableRow({
       </td>
       <td className="table-cell">
         {isFirstInGroup ? (
-          <div>
-            <Link 
-              href={`/metric/${metric.id}`}
-              className="text-neutral-900 font-semibold text-body hover:text-primary-600 transition-colors block"
+          <div className="flex items-start gap-2">
+            <div className="flex-1">
+              <Link 
+                href={`/metric/${metric.id}`}
+                className="text-neutral-900 font-semibold text-body hover:text-primary-600 transition-colors block"
+              >
+                {metric.name}
+              </Link>
+              {metric.data_source && (
+                <div className="text-body-sm text-neutral-500 mt-1">
+                  {metric.data_source}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEditClick(metric);
+              }}
+              className="text-neutral-400 hover:text-primary-600 transition-colors p-1 mt-0.5 flex-shrink-0"
+              aria-label="Edit metric"
+              title="Edit metric"
             >
-              {metric.name}
-            </Link>
-            {metric.data_source && (
-              <div className="text-body-sm text-neutral-500 mt-1">
-                {metric.data_source}
-              </div>
-            )}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
           </div>
         ) : (
           <div className="text-body-sm text-neutral-500">
@@ -170,6 +188,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: ToastType }>>([]);
   const [deleteConfirmMetric, setDeleteConfirmMetric] = useState<Metric | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editMetric, setEditMetric] = useState<Metric | null>(null);
   
   // Track metrics state to allow removal after deletion
   const [metricsState, setMetricsState] = useState(brands);
@@ -599,6 +618,7 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
                                 onValueSaved={handleValueSaved}
                                 onImportanceUpdate={handleImportanceUpdate}
                                 onDeleteClick={setDeleteConfirmMetric}
+                                onEditClick={setEditMetric}
                               />
                             );
                           })}
@@ -618,6 +638,18 @@ export function ScoreboardContent({ brands: initialBrands, allMetricValues: init
           brands={brands}
           onSuccess={handleMetricAdded}
           onClose={() => setShowAddMetricForm(false)}
+        />
+      )}
+
+      {/* Edit Metric Modal */}
+      {editMetric && (
+        <EditMetricForm
+          metric={editMetric}
+          onSuccess={() => {
+            // Refresh data after successful edit
+            window.location.reload();
+          }}
+          onClose={() => setEditMetric(null)}
         />
       )}
 
