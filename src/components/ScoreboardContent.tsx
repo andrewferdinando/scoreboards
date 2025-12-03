@@ -53,6 +53,7 @@ function SortableRow({
   onValueSaved,
   onImportanceUpdate,
   onDeleteClick,
+  onEditClick,
 }: {
   metric: MetricWithValues;
   isFirstInGroup: boolean;
